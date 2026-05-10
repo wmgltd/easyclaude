@@ -148,6 +148,18 @@ const api = {
   saveSettings: (next: Partial<Settings>): Promise<Settings> =>
     ipcRenderer.invoke('settings:save', next),
 
+  getActiveBlock: (): Promise<{
+    startTime: string
+    endTime: string
+    totalTokens: number
+    costUSD: number
+    msUntilReset: number
+    percentUsed: number | null
+  } | null> => ipcRenderer.invoke('usage:get-active-block'),
+
+  getGitBranch: (cwd: string): Promise<string | null> =>
+    ipcRenderer.invoke('git:get-branch', cwd),
+
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version'),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke('app:open-external', url),
   openFile: (opts: { path: string; line?: number; col?: number; cwd?: string; ide?: string }): Promise<void> =>

@@ -6,6 +6,7 @@ import { TmuxManager } from './tmux'
 import { BookmarkStore } from './bookmarks'
 import { scanProjects } from './projects'
 import { SettingsStore, type Settings } from './settings'
+import { getActiveBlock } from './usage'
 import type { CreateSessionOpts, ImportSessionOpts } from './types'
 
 const isDev = !app.isPackaged
@@ -152,6 +153,26 @@ function wireIpc(): void {
 
   ipcMain.handle('settings:get', () => settings.get())
   ipcMain.handle('settings:save', (_e, next: Partial<Settings>) => settings.save(next))
+
+  ipcMain.handle('usage:get-active-block', () => getActiveBlock())
+
+  ipcMain.handle('git:get-branch', async (_e, cwd: string) => {
+    if (!cwd) return null
+    const { execFile } = await import('node:child_process')
+    const { promisify } = await import('node:util')
+    const execFileAsync = promisify(execFile)
+    try {
+      const { stdout } = await execFileAsync(
+        '/usr/bin/git',
+        ['-C', cwd, 'rev-parse', '--abbrev-ref', 'HEAD'],
+        { timeout: 3000 }
+      )
+      const name = stdout.trim()
+      return name && name !== 'HEAD' ? name : null
+    } catch {
+      return null
+    }
+  })
 
   ipcMain.handle('app:get-version', () => app.getVersion())
   ipcMain.handle('app:open-external', (_e, url: string) => shell.openExternal(url))

@@ -21,6 +21,17 @@ for var in "${required[@]}"; do
   fi
 done
 
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  if command -v gh >/dev/null 2>&1; then
+    GH_TOKEN="$(gh auth token 2>/dev/null || true)"
+    export GH_TOKEN
+  fi
+fi
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  echo "Missing GH_TOKEN — run 'gh auth login' or set it in .env.local" >&2
+  exit 1
+fi
+
 echo "→ Building with code signing + notarization (notarization may take several minutes)…"
 echo "  Identity: $CSC_NAME"
 echo "  Team: $APPLE_TEAM_ID"

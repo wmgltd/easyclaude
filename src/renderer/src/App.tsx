@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Sidebar } from './components/Sidebar'
+import { TopBar } from './components/TopBar'
 import { TerminalView } from './components/TerminalView'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ImportSessionDialog } from './components/ImportSessionDialog'
@@ -468,8 +469,12 @@ export function App(): JSX.Element {
     ? `${sidebarWidth}px 4px 1fr 240px`
     : `${sidebarWidth}px 4px 1fr`
 
+  const activeSession = sessions.find((s) => s.id === activeId) ?? null
+
   return (
-    <div className="app" style={{ gridTemplateColumns: gridCols }}>
+    <div className="app-shell">
+      <TopBar session={activeSession} />
+      <div className="app" style={{ gridTemplateColumns: gridCols }}>
       <Sidebar
         sessions={sessions}
         activeId={activeId}
@@ -588,6 +593,7 @@ export function App(): JSX.Element {
           }}
         />
       )}
+      </div>
     </div>
   )
 }

@@ -48,7 +48,31 @@ export function Sidebar({
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [dropPosition, setDropPosition] = useState<'above' | 'below' | null>(null)
+  const [usage, setUsage] = useState<{
+    totalTokens: number
+    costUSD: number
+    msUntilReset: number
+    percentUsed: number | null
+  } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let mounted = true
+    const fetchUsage = (): void => {
+      window.api
+        .getActiveBlock()
+        .then((b) => {
+          if (mounted) setUsage(b)
+        })
+        .catch(() => undefined)
+    }
+    fetchUsage()
+    const interval = setInterval(fetchUsage, 10 * 60 * 1000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [])
 
   useEffect(() => {
     if (editingId && inputRef.current) {
@@ -118,7 +142,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-title">EasyClaude</div>
+        <div className="sidebar-title">EasyClaude <span className="sidebar-title-by">by WMG</span></div>
         <div className="sidebar-buttons">
           <button className="add-btn" onClick={onTogglePalette} title="Command palette (⌘K)">⌘K</button>
           <button
@@ -253,8 +277,53 @@ export function Sidebar({
           )
         })}
       </div>
+      <div
+        className="sidebar-footer"
+        title={
+          usage
+            ? `5-hour block · ${formatTokens(usage.totalTokens)} tokens · resets in ${formatDuration(usage.msUntilReset)}${usage.percentUsed != null ? ` · ${usage.percentUsed.toFixed(1)}% of historical max` : ''}`
+            : 'no active 5-hour usage block'
+        }
+      >
+        {usage ? (
+          <>
+            <div className="usage-row">
+              <span className="usage-pct">
+                {usage.percentUsed != null ? `${Math.round(usage.percentUsed)}%` : '—'}
+              </span>
+              <span className="usage-reset">↻ {formatDuration(usage.msUntilReset)}</span>
+            </div>
+            <div className="usage-bar">
+              <div
+                className="usage-bar-fill"
+                style={{ width: `${Math.min(100, usage.percentUsed ?? 0)}%` }}
+              />
+            </div>
+            <div className="usage-row usage-sub">
+              <span className="usage-tokens">{formatTokens(usage.totalTokens)} tok</span>
+            </div>
+          </>
+        ) : (
+          <span className="usage-empty">no active usage</span>
+        )}
+      </div>
     </aside>
   )
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return String(n)
+}
+
+function formatDuration(ms: number): string {
+  if (ms <= 0) return '0m'
+  const totalMin = Math.floor(ms / 60_000)
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
 }
 
 function statusLabel(status: SessionStatus): string {
