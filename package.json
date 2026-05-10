@@ -1,11 +1,11 @@
 {
   "name": "easyclaude",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Multi-session terminal hub for Claude Code, backed by tmux",
   "main": "./out/main/index.js",
   "author": "Kobi Sela <kobi@wmg.co.il>",
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
+  "private": false,
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -42,7 +42,7 @@
   },
   "build": {
     "appId": "com.kobi.easyclaude",
-    "productName": "EasyClaude",
+    "productName": "PikudClaude",
     "directories": {
       "buildResources": "build"
     },
@@ -82,7 +82,7 @@
     "publish": {
       "provider": "github",
       "owner": "wmgltd",
-      "repo": "easyclaude"
+      "repo": "pikudclaude"
     }
   }
 }

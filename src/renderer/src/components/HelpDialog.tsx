@@ -8,13 +8,13 @@ export function HelpDialog({ onClose }: Props): JSX.Element {
   return (
     <div className="dialog-backdrop" onClick={onClose}>
       <div className="dialog help-dialog" onClick={(e) => e.stopPropagation()}>
-        <h2>How to bring sessions into EasyClaude</h2>
+        <h2>How to bring sessions into PikudClaude</h2>
 
         <section className="help-section">
           <h3>1. Start a fresh session</h3>
           <p className="help-text">
             Click <strong>+</strong> in the sidebar. Pick a name, browse to the project folder,
-            and EasyClaude will launch <code>claude</code> in a new tmux session for you.
+            and PikudClaude will launch <code>claude</code> in a new tmux session for you.
           </p>
         </section>
 
@@ -22,7 +22,7 @@ export function HelpDialog({ onClose }: Props): JSX.Element {
           <h3>2. Import an existing tmux session</h3>
           <p className="help-text">
             If you already have a tmux session running anywhere on your mac, click <strong>⤓</strong> in
-            the sidebar — it lists every tmux session that isn&apos;t already in EasyClaude. Pick one,
+            the sidebar — it lists every tmux session that isn&apos;t already in PikudClaude. Pick one,
             give it a display name, and it shows up alongside the rest.
           </p>
           <p className="help-text">
@@ -32,14 +32,14 @@ export function HelpDialog({ onClose }: Props): JSX.Element {
           <CodeBlock code="tmux new -s my-project" />
           <p className="help-text">
             Then either start working inside it, or detach with <kbd>Ctrl-B</kbd> then <kbd>D</kbd>
-            and import it from EasyClaude.
+            and import it from PikudClaude.
           </p>
         </section>
 
         <section className="help-section">
           <h3>3. Wrap a Claude window that&apos;s already running</h3>
           <p className="help-text">
-            macOS doesn&apos;t allow embedding another app&apos;s window into EasyClaude. But the
+            macOS doesn&apos;t allow embedding another app&apos;s window into PikudClaude. But the
             chat history is saved in <code>~/.claude/projects/</code>, so you can resume it inside a
             tmux session without losing context.
           </p>
@@ -53,7 +53,7 @@ export function HelpDialog({ onClose }: Props): JSX.Element {
             session keeps running in the background — close the Terminal window safely.
           </p>
           <p className="help-text">
-            <strong>Step 5.</strong> In EasyClaude, click <strong>⤓</strong> and import it.
+            <strong>Step 5.</strong> In PikudClaude, click <strong>⤓</strong> and import it.
           </p>
           <p className="help-text" style={{ opacity: 0.7 }}>
             <code>claude -c</code> is short for <code>claude --continue</code> — picks the most

@@ -11,7 +11,7 @@ import type { CreateSessionOpts, ImportSessionOpts } from './types'
 
 const isDev = !app.isPackaged
 
-app.setName('EasyClaude')
+app.setName('PikudClaude')
 
 const ICON_PATH = isDev
   ? join(__dirname, '../../build/icon.png')
@@ -40,7 +40,7 @@ async function createWindow(): Promise<void> {
     backgroundColor: '#0b0b10',
     show: false,
     icon: existsSync(ICON_PATH) ? ICON_PATH : undefined,
-    title: 'EasyClaude',
+    title: 'PikudClaude',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -279,7 +279,7 @@ function buildAppMenu(): void {
     ...(isMac
       ? [
           {
-            label: 'EasyClaude',
+            label: 'PikudClaude',
             submenu: [
               { role: 'about' as const },
               { type: 'separator' as const },
@@ -347,7 +347,7 @@ function buildAppMenu(): void {
     {
       label: 'Help',
       submenu: [
-        { label: 'EasyClaude Help', click: () => send('help') }
+        { label: 'PikudClaude Help', click: () => send('help') }
       ]
     }
   ]

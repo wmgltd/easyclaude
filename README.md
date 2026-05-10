@@ -1,15 +1,15 @@
-# EasyClaude
+# PikudClaude
 
 Multi-session terminal hub for Claude Code, backed by tmux.
 
-EasyClaude is a macOS desktop app that lets you orchestrate many Claude Code sessions side-by-side — switch between them with `⌘1`–`⌘9` or a fuzzy palette, get notified when Claude needs your input, and (uniquely) **type and read Hebrew, Arabic, and other right-to-left scripts correctly** — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based Electron terminals.
+PikudClaude is a macOS desktop app that lets you orchestrate many Claude Code sessions side-by-side — switch between them with `⌘1`–`⌘9` or a fuzzy palette, get notified when Claude needs your input, and (uniquely) **type and read Hebrew, Arabic, and other right-to-left scripts correctly** — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based Electron terminals.
 
 ## Why
 
-Claude Code is great. Running half a dozen of them in different tmux windows is not. EasyClaude makes that workflow sane:
+Claude Code is great. Running half a dozen of them in different tmux windows is not. PikudClaude makes that workflow sane:
 
 - **All your sessions in one window.** Sidebar, ⌘+number to switch, drag-drop to reorder.
-- **Survives app restarts.** tmux keeps the sessions alive in the background; EasyClaude re-attaches on launch and triggers a clean redraw so Claude's TUI doesn't double-render.
+- **Survives app restarts.** tmux keeps the sessions alive in the background; PikudClaude re-attaches on launch and triggers a clean redraw so Claude's TUI doesn't double-render.
 - **Awaiting alerts.** Detects when Claude is asking you a numbered-options question and chimes / fires a macOS notification / bumps the dock badge — only when the session is *not* the one you're focused on.
 - **Hebrew/RTL support.** Words and sentences in Hebrew flow right-to-left as they should, mixed with English on the same line. This is implemented via a `MutationObserver` on xterm rows + targeted CSS — same architectural defect as every other xterm.js terminal, but actually solved.
 
@@ -28,7 +28,7 @@ Claude Code is great. Running half a dozen of them in different tmux windows is 
 
 xterm.js [issue #701](https://github.com/xtermjs/xterm.js/issues/701) ("Support RTL languages") has been open since 2017. Every Electron terminal that uses xterm.js inherits the gap: VSCode, Cursor, Hyper, Tabby, Wave Terminal, Mux. iTerm2 and WezTerm have their own open RTL bugs. Only macOS Terminal.app handles bidi properly out of the box — but it has no multi-session UX, no integration with Claude Code's TUI workflow.
 
-EasyClaude solves this via:
+PikudClaude solves this via:
 - DOM renderer (no canvas pre-rasterization — lets the browser fall back through the font stack so Hebrew glyphs render)
 - A `MutationObserver` that flags rows containing Hebrew/Arabic chars
 - CSS `direction: rtl; unicode-bidi: isolate` on the spans inside flagged rows, so Hebrew flows right-to-left and English embedded inside isolates back to LTR
@@ -50,7 +50,7 @@ Requires Node 20+ and tmux installed (`brew install tmux`).
 ```bash
 npm install
 npm run dev      # electron-vite dev with HMR
-npm run pack     # local packaged .app at dist/mac-arm64/EasyClaude.app
+npm run pack     # local packaged .app at dist/mac-arm64/PikudClaude.app
 npm run dist     # signed dmg + zip (needs Apple Developer ID)
 ```
 

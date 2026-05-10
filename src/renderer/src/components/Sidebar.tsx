@@ -142,7 +142,7 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-title">EasyClaude <span className="sidebar-title-by">by WMG</span></div>
+        <div className="sidebar-title">PikudClaude <span className="sidebar-title-by">by WMG</span></div>
         <div className="sidebar-buttons">
           <button className="add-btn" onClick={onTogglePalette} title="Command palette (⌘K)">⌘K</button>
           <button

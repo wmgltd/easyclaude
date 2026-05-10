@@ -8,7 +8,7 @@ export function WelcomeDialog({ onDismiss }: Props): JSX.Element {
       <div className="dialog welcome-dialog">
         <div className="welcome-header">
           <div className="welcome-logo">⌘</div>
-          <h2>Welcome to EasyClaude</h2>
+          <h2>Welcome to PikudClaude</h2>
           <p className="welcome-tagline">Multi-session terminal hub for Claude Code, backed by tmux.</p>
         </div>
 
@@ -31,7 +31,7 @@ export function WelcomeDialog({ onDismiss }: Props): JSX.Element {
             <div className="welcome-icon">★</div>
             <div className="welcome-feature-body">
               <h4>Hebrew, Arabic, RTL</h4>
-              <p>EasyClaude renders right-to-left scripts correctly — a feature missing from VSCode, Cursor, Hyper, and other xterm.js terminals.</p>
+              <p>PikudClaude renders right-to-left scripts correctly — a feature missing from VSCode, Cursor, Hyper, and other xterm.js terminals.</p>
             </div>
           </div>
           <div className="welcome-feature">

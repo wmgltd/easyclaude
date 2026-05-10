@@ -27,7 +27,7 @@ export function TopBar({ session }: Props): JSX.Element {
   }, [session?.id, session?.cwd])
 
   if (!session) {
-    return <div className="top-bar empty">EasyClaude</div>
+    return <div className="top-bar empty">PikudClaude</div>
   }
   const dir = basename(session.cwd) || session.cwd
 

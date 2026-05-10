@@ -172,9 +172,9 @@ export function ImportSessionDialog({ onImport, onCancel, onSwitchToNew }: Props
             <div className="help-section">
               <h3>C. After import — how to keep working</h3>
               <p className="help-text">
-                Once a session is in EasyClaude, just click it in the sidebar to attach. If claude
+                Once a session is in PikudClaude, just click it in the sidebar to attach. If claude
                 quit inside the session for any reason, type <code>claude -c</code> in the
-                shell to bring it back with the same chat history. Your work survives EasyClaude
+                shell to bring it back with the same chat history. Your work survives PikudClaude
                 restarts because the tmux server runs independently.
               </p>
             </div>

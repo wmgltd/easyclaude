@@ -616,7 +616,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
 
           {tab === 'about' && (
           <section className="settings-section about-section">
-            <h3>About EasyClaude</h3>
+            <h3>About PikudClaude</h3>
             <p className="about-tagline">Multi-session terminal hub for Claude Code, backed by tmux.</p>
             <div className="about-grid">
               <div className="about-label">Version</div>
@@ -630,7 +630,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                   onClick={(e) => {
                     e.preventDefault()
                     window.api.openExternal(
-                      `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})`
+                      `mailto:kobi@wmg.co.il?subject=PikudClaude%20feedback%20(v${appVersion || '?'})`
                     )
                   }}
                 >
@@ -650,12 +650,25 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 </a>
               </div>
               <div className="about-label">License</div>
-              <div className="about-value">UNLICENSED (private)</div>
+              <div className="about-value">
+                MIT — free for personal and commercial use{' '}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.api.openExternal(
+                      'https://github.com/wmgltd/easyclaude/blob/main/LICENSE'
+                    )
+                  }}
+                >
+                  (read)
+                </a>
+              </div>
             </div>
             <div className="about-highlight">
               <strong>★ Hebrew/RTL bidi support</strong>
               <p>
-                EasyClaude renders Hebrew, Arabic, and other RTL scripts correctly in mixed-direction
+                PikudClaude renders Hebrew, Arabic, and other RTL scripts correctly in mixed-direction
                 lines — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based
                 Electron terminals.
               </p>
@@ -669,7 +682,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                   onClick={(e) => {
                     e.preventDefault()
                     window.api.openExternal(
-                      `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})&body=`
+                      `mailto:kobi@wmg.co.il?subject=PikudClaude%20feedback%20(v${appVersion || '?'})&body=`
                     )
                   }}
                 >
@@ -684,7 +697,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 className="settings-test-btn"
                 onClick={() =>
                   window.api.openExternal(
-                    `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})`
+                    `mailto:kobi@wmg.co.il?subject=PikudClaude%20feedback%20(v${appVersion || '?'})`
                   )
                 }
               >
