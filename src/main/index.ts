@@ -12,6 +12,9 @@ import type { CreateSessionOpts, ImportSessionOpts } from './types'
 const isDev = !app.isPackaged
 
 app.setName('PikudClaude')
+// Pin userData to the legacy 'easyclaude' directory so the EasyClaude → PikudClaude rebrand
+// doesn't orphan existing sessions, bookmarks, and settings.
+app.setPath('userData', join(app.getPath('appData'), 'easyclaude'))
 
 const ICON_PATH = isDev
   ? join(__dirname, '../../build/icon.png')
