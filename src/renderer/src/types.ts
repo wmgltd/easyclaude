@@ -34,6 +34,7 @@ export interface ProjectInfo {
 export type ThemeName = 'default' | 'solarized-dark' | 'dracula' | 'nord' | 'light' | 'custom'
 export type CursorStyle = 'block' | 'underline' | 'bar'
 export type SoundType = 'chime' | 'beep'
+export type UpdateChannel = 'stable' | 'beta'
 
 export interface Settings {
   notifications: {
@@ -53,6 +54,7 @@ export interface Settings {
     autoBookmarkOnAwaiting: boolean
     recentProjectsMax: number
     preferredIDE: 'cursor' | 'vscode' | 'finder'
+    initialCommandsLibrary: string[]
   }
   appearance: {
     fontSize: number
@@ -67,6 +69,10 @@ export interface Settings {
       cursor: string
       selectionBackground: string
     }
+  }
+  updates: {
+    channel: UpdateChannel
+    autoCheck: boolean
   }
   ui: {
     welcomeShown: boolean

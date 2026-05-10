@@ -174,6 +174,22 @@ function wireIpc(): void {
     }
   })
 
+  ipcMain.handle('updates:check-now', async () => {
+    if (isDev) return { ok: false, reason: 'dev mode' }
+    try {
+      const r = await autoUpdater.checkForUpdates()
+      return { ok: true, hasUpdate: r?.updateInfo?.version !== app.getVersion(), version: r?.updateInfo?.version ?? null }
+    } catch (e) {
+      return { ok: false, reason: String((e as Error).message ?? e) }
+    }
+  })
+
+  ipcMain.handle('updates:set-channel', (_e, channel: 'stable' | 'beta') => {
+    if (isDev) return
+    autoUpdater.allowPrerelease = channel === 'beta'
+    autoUpdater.channel = channel === 'beta' ? 'beta' : 'latest'
+  })
+
   ipcMain.handle('app:get-version', () => app.getVersion())
   ipcMain.handle('app:open-external', (_e, url: string) => shell.openExternal(url))
 
@@ -354,12 +370,23 @@ app.whenReady().then(async () => {
   if (!isDev) {
     autoUpdater.autoDownload = true
     autoUpdater.autoInstallOnAppQuit = true
-    autoUpdater.on('update-downloaded', () => {
+    const s = settings.get()
+    autoUpdater.allowPrerelease = s.updates.channel === 'beta'
+    autoUpdater.channel = s.updates.channel === 'beta' ? 'beta' : 'latest'
+    const broadcast = (status: string, payload?: unknown): void => {
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('update:downloaded')
+        mainWindow.webContents.send('update:status', { status, payload })
       }
-    })
-    autoUpdater.checkForUpdatesAndNotify().catch(() => undefined)
+    }
+    autoUpdater.on('checking-for-update', () => broadcast('checking'))
+    autoUpdater.on('update-available', (info) => broadcast('available', info))
+    autoUpdater.on('update-not-available', () => broadcast('up-to-date'))
+    autoUpdater.on('error', (err) => broadcast('error', String(err?.message ?? err)))
+    autoUpdater.on('download-progress', (p) => broadcast('downloading', p))
+    autoUpdater.on('update-downloaded', () => broadcast('downloaded'))
+    if (s.updates.autoCheck) {
+      autoUpdater.checkForUpdatesAndNotify().catch(() => undefined)
+    }
   }
 
   app.on('activate', () => {

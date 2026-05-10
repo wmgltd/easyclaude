@@ -29,16 +29,50 @@ const FONT_OPTIONS: Array<{ label: string; value: string; note?: string }> = [
   { label: 'Inconsolata', value: 'Inconsolata, Menlo, monospace' }
 ]
 
-type SettingsTab = 'notifications' | 'sessions' | 'appearance' | 'shortcuts' | 'about'
+type SettingsTab = 'notifications' | 'sessions' | 'appearance' | 'shortcuts' | 'updates' | 'about'
 
 export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initialTab = 'notifications' }: Props): JSX.Element {
   const [draft, setDraft] = useState<Settings>(initial)
   const [tab, setTab] = useState<SettingsTab>(initialTab)
   const [appVersion, setAppVersion] = useState<string>('')
+  const [updateStatus, setUpdateStatus] = useState<string>('idle')
+  const [updateMsg, setUpdateMsg] = useState<string>('')
 
   useEffect(() => {
     window.api.getAppVersion().then(setAppVersion).catch(() => undefined)
   }, [])
+
+  useEffect(() => {
+    return window.api.onUpdateStatus((status, payload) => {
+      setUpdateStatus(status)
+      if (status === 'available' && payload && typeof payload === 'object' && 'version' in payload) {
+        setUpdateMsg(`v${(payload as { version: string }).version} available — downloading…`)
+      } else if (status === 'downloaded') {
+        setUpdateMsg('Update downloaded — will install on next restart')
+      } else if (status === 'error') {
+        setUpdateMsg(typeof payload === 'string' ? payload : 'Update error')
+      } else if (status === 'up-to-date') {
+        setUpdateMsg('You are on the latest version')
+      } else if (status === 'checking') {
+        setUpdateMsg('Checking for updates…')
+      } else if (status === 'downloading' && payload && typeof payload === 'object' && 'percent' in payload) {
+        setUpdateMsg(`Downloading… ${Math.round((payload as { percent: number }).percent)}%`)
+      }
+    })
+  }, [])
+
+  const checkForUpdatesNow = async (): Promise<void> => {
+    setUpdateStatus('checking')
+    setUpdateMsg('Checking for updates…')
+    const r = await window.api.checkForUpdatesNow()
+    if (!r.ok) {
+      setUpdateStatus('error')
+      setUpdateMsg(r.reason ?? 'Could not check for updates')
+    } else if (!r.hasUpdate) {
+      setUpdateStatus('up-to-date')
+      setUpdateMsg(`You are on the latest version (${appVersion || '—'})`)
+    }
+  }
 
   const update = <K extends keyof Settings>(section: K, patch: Partial<Settings[K]>): void => {
     setDraft((d) => ({ ...d, [section]: { ...d[section], ...patch } }))
@@ -101,6 +135,13 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
             Shortcuts
           </button>
           <button
+            className={`dialog-tab ${tab === 'updates' ? 'active' : ''}`}
+            type="button"
+            onClick={() => setTab('updates')}
+          >
+            Updates
+          </button>
+          <button
             className={`dialog-tab ${tab === 'about' ? 'active' : ''}`}
             type="button"
             onClick={() => setTab('about')}
@@ -143,13 +184,22 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               <input
                 type="range"
                 min={0}
-                max={1}
+                max={1.5}
                 step={0.05}
                 value={draft.notifications.volume}
                 onChange={(e) => update('notifications', { volume: Number(e.target.value) })}
                 disabled={!draft.notifications.soundEnabled}
               />
               <span className="settings-value">{Math.round(draft.notifications.volume * 100)}%</span>
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={() => onTestSound(draft.notifications.volume, draft.notifications.soundType)}
+                disabled={!draft.notifications.soundEnabled}
+                title="Play preview"
+              >
+                ▶ preview
+              </button>
             </label>
             <label className="settings-row">
               <input
@@ -206,6 +256,49 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 placeholder="claude"
               />
             </label>
+            <div className="settings-row settings-row-stack">
+              <span className="settings-label">Commands library</span>
+              <div className="cmd-library">
+                {draft.sessions.initialCommandsLibrary.map((cmd, i) => (
+                  <div className="cmd-library-row" key={i}>
+                    <input
+                      type="text"
+                      className="settings-input"
+                      value={cmd}
+                      onChange={(e) => {
+                        const next = [...draft.sessions.initialCommandsLibrary]
+                        next[i] = e.target.value
+                        update('sessions', { initialCommandsLibrary: next })
+                      }}
+                      placeholder="claude --resume"
+                    />
+                    <button
+                      type="button"
+                      className="cmd-library-remove"
+                      title="Remove"
+                      onClick={() => {
+                        const next = draft.sessions.initialCommandsLibrary.filter((_, j) => j !== i)
+                        update('sessions', { initialCommandsLibrary: next })
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="settings-test-btn cmd-library-add"
+                  onClick={() =>
+                    update('sessions', {
+                      initialCommandsLibrary: [...draft.sessions.initialCommandsLibrary, '']
+                    })
+                  }
+                >
+                  + Add command
+                </button>
+                <p className="settings-hint">Quick-pick when creating a new session.</p>
+              </div>
+            </div>
             <label className="settings-row">
               <span className="settings-label">Default cwd</span>
               <input
@@ -468,6 +561,59 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
           </section>
           )}
 
+          {tab === 'updates' && (
+          <section className="settings-section">
+            <h3>Updates</h3>
+            <div className="settings-row">
+              <span>Update channel</span>
+              <div className="seg-control">
+                <button
+                  type="button"
+                  className={`seg-btn ${draft.updates.channel === 'stable' ? 'on' : ''}`}
+                  onClick={() => {
+                    update('updates', { channel: 'stable' })
+                    window.api.setUpdateChannel('stable').catch(() => undefined)
+                  }}
+                >
+                  Stable
+                </button>
+                <button
+                  type="button"
+                  className={`seg-btn ${draft.updates.channel === 'beta' ? 'on' : ''}`}
+                  onClick={() => {
+                    update('updates', { channel: 'beta' })
+                    window.api.setUpdateChannel('beta').catch(() => undefined)
+                  }}
+                >
+                  Beta
+                </button>
+              </div>
+            </div>
+            <label className="settings-row">
+              <input
+                type="checkbox"
+                checked={draft.updates.autoCheck}
+                onChange={(e) => update('updates', { autoCheck: e.target.checked })}
+              />
+              <span>Check for updates automatically on launch</span>
+            </label>
+            <div className="settings-row">
+              <span>Current version</span>
+              <span className="settings-value">{appVersion || '—'}</span>
+            </div>
+            <div className="settings-row">
+              <button type="button" className="settings-test-btn" onClick={checkForUpdatesNow}>
+                Check now
+              </button>
+              <span className={`update-status update-status-${updateStatus}`}>{updateMsg}</span>
+            </div>
+            <p className="settings-hint">
+              Updates are signed and notarized by Apple. Beta releases include unstable changes —
+              switch only if you want to test pre-release features.
+            </p>
+          </section>
+          )}
+
           {tab === 'about' && (
           <section className="settings-section about-section">
             <h3>About EasyClaude</h3>
@@ -477,6 +623,32 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               <div className="about-value">{appVersion || '—'}</div>
               <div className="about-label">Author</div>
               <div className="about-value">Kobi Sela (WMG)</div>
+              <div className="about-label">Contact</div>
+              <div className="about-value">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.api.openExternal(
+                      `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})`
+                    )
+                  }}
+                >
+                  kobi@wmg.co.il
+                </a>
+              </div>
+              <div className="about-label">Repository</div>
+              <div className="about-value">
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.api.openExternal('https://github.com/wmgltd/easyclaude')
+                  }}
+                >
+                  github.com/wmgltd/easyclaude
+                </a>
+              </div>
               <div className="about-label">License</div>
               <div className="about-value">UNLICENSED (private)</div>
             </div>
@@ -488,7 +660,54 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 Electron terminals.
               </p>
             </div>
+            <div className="about-feedback">
+              <strong>💌 Have ideas or found a bug?</strong>
+              <p>
+                Send suggestions or issues to{' '}
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.api.openExternal(
+                      `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})&body=`
+                    )
+                  }}
+                >
+                  kobi@wmg.co.il
+                </a>
+                .
+              </p>
+            </div>
             <div className="about-actions">
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={() =>
+                  window.api.openExternal(
+                    `mailto:kobi@wmg.co.il?subject=EasyClaude%20feedback%20(v${appVersion || '?'})`
+                  )
+                }
+              >
+                ✉ Send feedback
+              </button>
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={() =>
+                  window.api.openExternal('https://github.com/wmgltd/easyclaude/issues/new')
+                }
+              >
+                Report issue
+              </button>
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={() =>
+                  window.api.openExternal('https://github.com/wmgltd/easyclaude/releases')
+                }
+              >
+                Releases
+              </button>
               <button
                 type="button"
                 className="settings-test-btn"

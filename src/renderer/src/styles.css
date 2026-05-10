@@ -752,9 +752,38 @@ input[type="text"]:focus {
   color: var(--text-dim);
 }
 
+.about-feedback {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.about-feedback strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #6ee7b7;
+}
+.about-feedback p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.about-feedback a,
+.about-section a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+.about-feedback a:hover,
+.about-section a:hover {
+  text-decoration: underline;
+}
+
 .about-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .settings-scroll {
@@ -858,6 +887,73 @@ input[type="text"]:focus {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.settings-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.settings-hint {
+  font-size: 11px;
+  opacity: 0.6;
+  margin: 4px 0 0;
+}
+.cmd-library {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.cmd-library-row {
+  display: flex;
+  gap: 6px;
+}
+.cmd-library-row .settings-input {
+  flex: 1;
+}
+.cmd-library-remove {
+  width: 28px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: #ef4444;
+  cursor: pointer;
+}
+.cmd-library-remove:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+.cmd-library-add {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.seg-control {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg-btn {
+  background: transparent;
+  border: 0;
+  padding: 4px 14px;
+  color: #c0c0d0;
+  cursor: pointer;
+  font-size: 12px;
+}
+.seg-btn.on {
+  background: var(--accent);
+  color: white;
+}
+
+.update-status {
+  font-size: 12px;
+  color: var(--text-muted, #9ca3af);
+  margin-left: 8px;
+}
+.update-status-error { color: #ef4444; }
+.update-status-up-to-date { color: #10b981; }
+.update-status-available, .update-status-downloading, .update-status-downloaded { color: #a78bfa; }
 
 .external-list {
   max-height: 200px;

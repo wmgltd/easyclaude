@@ -157,6 +157,21 @@ const api = {
     percentUsed: number | null
   } | null> => ipcRenderer.invoke('usage:get-active-block'),
 
+  checkForUpdatesNow: (): Promise<{
+    ok: boolean
+    hasUpdate?: boolean
+    version?: string | null
+    reason?: string
+  }> => ipcRenderer.invoke('updates:check-now'),
+  setUpdateChannel: (channel: 'stable' | 'beta'): Promise<void> =>
+    ipcRenderer.invoke('updates:set-channel', channel),
+  onUpdateStatus: (handler: (status: string, payload?: unknown) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, msg: { status: string; payload?: unknown }) =>
+      handler(msg.status, msg.payload)
+    ipcRenderer.on('update:status', listener)
+    return () => ipcRenderer.removeListener('update:status', listener)
+  },
+
   getGitBranch: (cwd: string): Promise<string | null> =>
     ipcRenderer.invoke('git:get-branch', cwd),
 

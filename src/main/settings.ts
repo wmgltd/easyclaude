@@ -5,6 +5,7 @@ import { join, dirname } from 'node:path'
 export type ThemeName = 'default' | 'solarized-dark' | 'dracula' | 'nord' | 'light' | 'custom'
 export type CursorStyle = 'block' | 'underline' | 'bar'
 export type SoundType = 'chime' | 'beep'
+export type UpdateChannel = 'stable' | 'beta'
 
 export interface Settings {
   notifications: {
@@ -24,6 +25,7 @@ export interface Settings {
     autoBookmarkOnAwaiting: boolean
     recentProjectsMax: number
     preferredIDE: 'cursor' | 'vscode' | 'finder'
+    initialCommandsLibrary: string[]
   }
   appearance: {
     fontSize: number
@@ -38,6 +40,10 @@ export interface Settings {
       cursor: string
       selectionBackground: string
     }
+  }
+  updates: {
+    channel: UpdateChannel
+    autoCheck: boolean
   }
   ui: {
     welcomeShown: boolean
@@ -61,7 +67,8 @@ const DEFAULTS: Settings = {
     defaultColor: '#7c3aed',
     autoBookmarkOnAwaiting: false,
     recentProjectsMax: 6,
-    preferredIDE: 'cursor'
+    preferredIDE: 'cursor',
+    initialCommandsLibrary: ['claude', 'claude --resume', 'claude --continue']
   },
   appearance: {
     fontSize: 13,
@@ -76,6 +83,10 @@ const DEFAULTS: Settings = {
       cursor: '#7c3aed',
       selectionBackground: '#7c3aed55'
     }
+  },
+  updates: {
+    channel: 'stable',
+    autoCheck: true
   },
   ui: {
     welcomeShown: false

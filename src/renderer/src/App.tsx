@@ -101,7 +101,7 @@ function playAwaitingSound(volume = 0.4, soundType: 'chime' | 'beep' = 'chime'):
   const ctx = getAudioCtx()
   if (!ctx) return
   if (ctx.state === 'suspended') ctx.resume().catch(() => undefined)
-  const peak = Math.max(0.001, Math.min(1, volume))
+  const peak = Math.max(0.001, Math.min(2, volume))
   try {
     const t = ctx.currentTime
     const playTone = (freq: number, start: number, duration: number, type: OscillatorType = 'sine'): void => {
