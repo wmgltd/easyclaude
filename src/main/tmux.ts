@@ -88,6 +88,16 @@ const STATUS_WINDOW_MS = 1500
 const STATUS_BYTE_THRESHOLD = 200
 const AWAITING_POLL_MS = 2000
 
+const SHELL_COMMANDS = new Set([
+  'bash', 'zsh', 'fish', 'sh', 'dash', 'tcsh', 'csh', 'ksh', 'login', 'screen', 'tmux'
+])
+
+function isShellCommand(cmd: string): boolean {
+  if (!cmd) return true
+  const trimmed = cmd.trim().replace(/^-/, '')
+  return SHELL_COMMANDS.has(trimmed)
+}
+
 function detectAwaiting(content: string): boolean {
   const lines = content.split('\n').slice(-30)
   let arrowOption = false
@@ -105,9 +115,11 @@ export class TmuxManager extends EventEmitter {
   private dataWindow = new Map<string, DataSample[]>()
   private lastEmittedStatus = new Map<string, SessionStatus>()
   private awaitingMap = new Map<string, boolean>()
+  private paneCommandMap = new Map<string, string>()
   private statusTimer: NodeJS.Timeout | null = null
   private awaitingTimer: NodeJS.Timeout | null = null
   private needsRedrawOnAttach = new Set<string>()
+  private globalBindingsApplied = false
   private async ensureMouseAndClipboard(tmuxName: string): Promise<void> {
     try {
       await tmux('set-option', '-t', tmuxName, 'mouse', 'on')
@@ -117,7 +129,29 @@ export class TmuxManager extends EventEmitter {
     try {
       await tmux('set-option', '-t', tmuxName, 'set-clipboard', 'on')
     } catch {
-      /* not supported — clipboard via OSC52 won't work, but mouse mode still does */
+      /* not supported */
+    }
+    await this.ensureGlobalBindings()
+  }
+
+  private async ensureGlobalBindings(): Promise<void> {
+    if (this.globalBindingsApplied) return
+    this.globalBindingsApplied = true
+    try {
+      await tmux(
+        'bind-key', '-T', 'root', 'WheelUpPane',
+        'copy-mode -e ; send-keys -X -N 3 scroll-up'
+      )
+    } catch {
+      /* ignore */
+    }
+    try {
+      await tmux(
+        'bind-key', '-T', 'copy-mode-vi', 'MouseDragEnd1Pane',
+        'send-keys -X copy-selection-no-clear ; run-shell -b "tmux show-buffer | pbcopy"'
+      )
+    } catch {
+      /* ignore */
     }
   }
 
@@ -151,8 +185,11 @@ export class TmuxManager extends EventEmitter {
       const recent = samples.filter((s) => now - s.ts < STATUS_WINDOW_MS)
       if (recent.length !== samples.length) this.dataWindow.set(id, recent)
       const totalBytes = recent.reduce((sum, s) => sum + s.size, 0)
+      const cmd = this.paneCommandMap.get(id) ?? ''
+      const claudeRunning = !isShellCommand(cmd)
       let status: SessionStatus
       if (this.awaitingMap.get(id)) status = 'awaiting'
+      else if (!claudeRunning) status = 'shell'
       else if (totalBytes > STATUS_BYTE_THRESHOLD) status = 'working'
       else status = 'idle'
       if (this.lastEmittedStatus.get(id) !== status) {
@@ -180,6 +217,14 @@ export class TmuxManager extends EventEmitter {
       } catch {
         /* capture failed; leave previous value */
       }
+      try {
+        const { stdout } = await execFileAsync(resolveTmuxBin(), [
+          '-u', 'display-message', '-p', '-t', s.tmuxName, '#{pane_current_command}'
+        ])
+        this.paneCommandMap.set(id, stdout.trim())
+      } catch {
+        /* leave previous value */
+      }
     }
   }
 
@@ -198,6 +243,22 @@ export class TmuxManager extends EventEmitter {
     const s = this.getSession(id)
     if (!s) throw new Error(`session ${id} not found`)
     return this.capturePaneText(s.tmuxName, lines)
+  }
+
+  async captureLive(id: string): Promise<string> {
+    const s = this.getSession(id)
+    if (!s) return ''
+    try {
+      const { stdout } = await execFileAsync(resolveTmuxBin(), [
+        '-u',
+        'capture-pane',
+        '-t', s.tmuxName,
+        '-p'
+      ])
+      return stdout
+    } catch {
+      return ''
+    }
   }
 
   getStatuses(): Record<string, SessionStatus> {
@@ -389,12 +450,25 @@ export class TmuxManager extends EventEmitter {
     this.attached.delete(id)
     this.dataWindow.delete(id)
     this.awaitingMap.delete(id)
+    this.paneCommandMap.delete(id)
   }
 
   write(id: string, data: string): void {
     const a = this.attached.get(id)
     if (!a) return
     a.pty.write(data)
+  }
+
+  async sendText(id: string, text: string): Promise<void> {
+    const s = this.getSession(id)
+    if (!s) return
+    try {
+      await execFileAsync(resolveTmuxBin(), [
+        '-u', 'send-keys', '-t', s.tmuxName, '-l', text
+      ])
+    } catch {
+      /* fall back silently */
+    }
   }
 
   resize(id: string, cols: number, rows: number): void {

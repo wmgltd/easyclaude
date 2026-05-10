@@ -13,7 +13,8 @@
     "rebuild": "electron-rebuild -f -w node-pty",
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-vite build && electron-builder --dir",
-    "dist": "electron-vite build && electron-builder --mac"
+    "dist": "electron-vite build && electron-builder --mac",
+    "release": "bash scripts/release.sh"
   },
   "dependencies": {
     "@xterm/addon-clipboard": "^0.2.0",
@@ -22,6 +23,7 @@
     "@xterm/addon-web-links": "^0.11.0",
     "@xterm/addon-webgl": "^0.18.0",
     "@xterm/xterm": "^5.5.0",
+    "electron-updater": "^6.8.3",
     "node-pty": "^1.0.0"
   },
   "devDependencies": {
@@ -51,6 +53,11 @@
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true,
       "target": [
         {
           "target": "dmg",
@@ -71,6 +78,11 @@
     },
     "dmg": {
       "icon": "build/icon.icns"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "wmgltd",
+      "repo": "easyclaude"
     }
   }
 }

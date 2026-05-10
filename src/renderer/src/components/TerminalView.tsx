@@ -48,6 +48,8 @@ export function TerminalView({
   const savedScrollLineRef = useRef<number | null>(null)
   const bidiObserverRef = useRef<MutationObserver | null>(null)
   const preferredIDERef = useRef(preferredIDE)
+  const inCopyModeRef = useRef(false)
+  const scrollDepthRef = useRef(0)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -72,7 +74,9 @@ export function TerminalView({
         selectionBackground: theme.selectionBackground
       },
       allowProposedApi: true,
-      scrollback: 10000
+      scrollback: 10000,
+      macOptionClickForcesSelection: true,
+      rightClickSelectsWord: true
     })
     const fit = new FitAddon()
     const search = new SearchAddon()
@@ -87,7 +91,53 @@ export function TerminalView({
         window.api.writeSession(session.id, '\x1b\r')
         return false
       }
+      if (ev.type === 'keydown' && (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey && ev.key.toLowerCase() === 'c') {
+        const sel = term.getSelection()
+        if (sel) {
+          navigator.clipboard.writeText(sel).catch(() => undefined)
+          return false
+        }
+      }
       return true
+    })
+
+    let pendingSelection = ''
+    term.onSelectionChange(() => {
+      const s = term.getSelection()
+      if (s && s.length > 0) pendingSelection = s
+    })
+    host.addEventListener('mouseup', () => {
+      if (pendingSelection) {
+        const text = pendingSelection
+        pendingSelection = ''
+        navigator.clipboard.writeText(text).catch(() => undefined)
+      }
+    })
+
+    let wheelAccum = 0
+    term.attachCustomWheelEventHandler((ev) => {
+      if (ev.deltaY === 0) return false
+      wheelAccum += ev.deltaY
+      const threshold = 30
+      let seq = ''
+      while (Math.abs(wheelAccum) >= threshold) {
+        const dir = wheelAccum < 0 ? -1 : 1
+        const code = dir < 0 ? 64 : 65
+        const btn = String.fromCharCode(code + 32)
+        const x = String.fromCharCode(33)
+        const y = String.fromCharCode(33)
+        seq += `\x1b[M${btn}${x}${y}`
+        if (dir < 0) {
+          scrollDepthRef.current += 1
+          inCopyModeRef.current = true
+        } else {
+          scrollDepthRef.current = Math.max(0, scrollDepthRef.current - 1)
+          if (scrollDepthRef.current === 0) inCopyModeRef.current = false
+        }
+        wheelAccum -= dir * threshold
+      }
+      if (seq) window.api.writeSession(session.id, seq)
+      return false
     })
 
     term.registerLinkProvider({
@@ -135,6 +185,7 @@ export function TerminalView({
     searchRef.current = search
     bidiObserverRef.current = setupBidiObserver(host)
 
+
     const init = async () => {
       requestAnimationFrame(() => {
         try {
@@ -146,9 +197,15 @@ export function TerminalView({
       const dims = fit.proposeDimensions() ?? { cols: 100, rows: 30 }
       await window.api.attachSession(session.id, dims.cols, dims.rows)
       unsubRef.current = window.api.onSessionData((id, data) => {
-        if (id === session.id) term.write(data)
+        if (id === session.id) term.write(stripMouseTracking(data))
       })
       term.onData((data) => {
+        if (inCopyModeRef.current) {
+          inCopyModeRef.current = false
+          scrollDepthRef.current = 0
+          window.api.writeSession(session.id, 'q' + data)
+          return
+        }
         window.api.writeSession(session.id, data)
       })
       term.onResize(({ cols, rows }) => {
@@ -367,6 +424,12 @@ export function TerminalView({
       )}
     </div>
   )
+}
+
+const MOUSE_TRACKING_RE = /\x1b\[\?(?:1000|1001|1002|1003|1004|1005|1006|1015)[hl]/g
+
+function stripMouseTracking(data: string): string {
+  return data.replace(MOUSE_TRACKING_RE, '')
 }
 
 function quotePath(p: string): string {

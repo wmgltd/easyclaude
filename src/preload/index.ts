@@ -103,6 +103,8 @@ const api = {
   detachSession: (id: string): Promise<void> => ipcRenderer.invoke('tmux:detach', id),
   writeSession: (id: string, data: string): Promise<void> =>
     ipcRenderer.invoke('tmux:write', id, data),
+  sendText: (id: string, text: string): Promise<void> =>
+    ipcRenderer.invoke('tmux:send-text', id, text),
   resizeSession: (id: string, cols: number, rows: number): Promise<void> =>
     ipcRenderer.invoke('tmux:resize', id, cols, rows),
   renameSession: (id: string, name: string): Promise<void> =>
@@ -125,6 +127,7 @@ const api = {
   },
   getStatuses: (): Promise<Record<string, SessionStatus>> =>
     ipcRenderer.invoke('tmux:get-statuses'),
+  captureLive: (id: string): Promise<string> => ipcRenderer.invoke('tmux:capture-live', id),
   onSessionStatus: (handler: (id: string, status: SessionStatus) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, id: string, status: SessionStatus) =>
       handler(id, status)

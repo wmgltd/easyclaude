@@ -15,7 +15,7 @@ export interface ExternalTmuxSession {
   createdAt: number
 }
 
-export type SessionStatus = 'working' | 'idle' | 'awaiting' | 'detached'
+export type SessionStatus = 'working' | 'idle' | 'awaiting' | 'detached' | 'shell'
 
 export interface Bookmark {
   id: string

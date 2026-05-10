@@ -162,9 +162,9 @@ export function Sidebar({
               onClick={() => !isEditing && onSelect(s.id)}
             >
               <div
-                className="session-dot"
-                style={{ background: s.color }}
-                title="Click to change color"
+                className={`session-dot ${status === 'shell' || status === 'detached' ? 'inactive' : ''}`}
+                style={{ background: status === 'shell' || status === 'detached' ? '#3b3b46' : s.color }}
+                title={status === 'shell' ? 'Claude not running — click to change color' : 'Click to change color'}
                 onClick={(e) => {
                   e.stopPropagation()
                   setColorPickerId(colorPickerId === s.id ? null : s.id)
@@ -263,5 +263,6 @@ function statusLabel(status: SessionStatus): string {
     case 'idle': return 'idle — waiting for you'
     case 'awaiting': return 'awaiting your decision (1 / 2 / 3)'
     case 'detached': return 'not attached'
+    case 'shell': return 'shell only — claude not running'
   }
 }

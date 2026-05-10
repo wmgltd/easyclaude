@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell, dialog, nativeImage, Notification, Menu } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { TmuxManager } from './tmux'
@@ -95,6 +96,10 @@ function wireIpc(): void {
     manager.write(id, data)
   })
 
+  ipcMain.handle('tmux:send-text', async (_e, id: string, text: string) => {
+    await manager.sendText(id, text)
+  })
+
   ipcMain.handle('tmux:resize', (_e, id: string, cols: number, rows: number) => {
     manager.resize(id, cols, rows)
   })
@@ -112,6 +117,8 @@ function wireIpc(): void {
   })
 
   ipcMain.handle('tmux:get-statuses', () => manager.getStatuses())
+
+  ipcMain.handle('tmux:capture-live', (_e, id: string) => manager.captureLive(id))
 
   ipcMain.handle('dialog:pick-directory', async () => {
     const result = await dialog.showOpenDialog({
@@ -322,6 +329,17 @@ app.whenReady().then(async () => {
   wireIpc()
   await createWindow()
   buildAppMenu()
+
+  if (!isDev) {
+    autoUpdater.autoDownload = true
+    autoUpdater.autoInstallOnAppQuit = true
+    autoUpdater.on('update-downloaded', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update:downloaded')
+      }
+    })
+    autoUpdater.checkForUpdatesAndNotify().catch(() => undefined)
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
