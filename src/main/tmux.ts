@@ -119,6 +119,7 @@ export class TmuxManager extends EventEmitter {
   private statusTimer: NodeJS.Timeout | null = null
   private awaitingTimer: NodeJS.Timeout | null = null
   private needsRedrawOnAttach = new Set<string>()
+  private resurrecting = new Map<string, Promise<void>>()
   private globalBindingsApplied = false
   private async ensureMouseAndClipboard(tmuxName: string): Promise<void> {
     try {
@@ -174,6 +175,16 @@ export class TmuxManager extends EventEmitter {
   }
 
   private async resurrect(s: SessionMeta): Promise<void> {
+    // Concurrent attach() calls (e.g. double-renders) must share one tmux
+    // new-session invocation — otherwise the second one errors "duplicate session".
+    const inflight = this.resurrecting.get(s.id)
+    if (inflight) return inflight
+    const job = this.spawnFreshTmux(s).finally(() => this.resurrecting.delete(s.id))
+    this.resurrecting.set(s.id, job)
+    return job
+  }
+
+  private async spawnFreshTmux(s: SessionMeta): Promise<void> {
     if (s.imported) {
       throw new Error(
         `Imported session "${s.name}" can't be auto-resurrected — re-import it from an existing tmux session.`
