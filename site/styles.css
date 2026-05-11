@@ -360,24 +360,6 @@ h2 {
   unicode-bidi: isolate;
 }
 
-/* === Stack === */
-.stack-list {
-  margin-top: 32px;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
-}
-.stack-list li {
-  padding: 14px 18px;
-  background: #fafafd;
-  border-radius: 10px;
-  font-size: 15px;
-  color: #555571;
-}
-.stack-list strong { color: #1a1a2e; }
-
 /* === CTA === */
 .cta {
   background: #fafafd;
@@ -416,6 +398,13 @@ h2 {
 .footer-links a:hover { color: #1a1a2e; }
 .footer-credit a { color: #7c3aed; }
 .footer-credit a:hover { text-decoration: underline; }
+.footer-stack {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #b0b0c0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
 
 @media (max-width: 640px) {
   section { padding: 64px 0; }
