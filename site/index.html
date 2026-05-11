@@ -55,10 +55,8 @@
           <a class="btn btn-secondary" href="https://github.com/wmgltd/PikudClaude">View on GitHub</a>
         </div>
         <div class="hero-shot">
-          <!-- TODO: replace with real app screenshot -->
-          <div class="placeholder placeholder-shot" aria-label="Screenshot placeholder">
-            <span>App screenshot · 1600×1000</span>
-          </div>
+          <img class="hero-shot-img" src="assets/screenshot-hero.png" width="2000" height="1243"
+               alt="PikudClaude main window showing seven Claude Code sessions in the sidebar and a live conversation with Hebrew text rendered right-to-left" />
         </div>
       </div>
     </section>
@@ -140,13 +138,13 @@
             </div>
             <div class="terminal-body">
               <div class="line"><span class="prompt">$</span> claude</div>
-              <div class="line">&gt; <span class="bidi">תוכל לעזור לי לרפקטר את הפונקציה הזאת?</span></div>
-              <div class="line line-claude">● <span class="bidi">בטח! הנה גרסה משופרת שמטפלת ב־<code>null</code> כראוי:</span></div>
+              <div class="line line-rtl">&gt; תוכל לעזור לי לרפקטר את הפונקציה הזאת?</div>
+              <div class="line line-claude line-rtl">● בטח! הנה גרסה משופרת שמטפלת ב־<code>null</code> כראוי:</div>
               <div class="line"><span class="code-kw">function</span> <span class="code-fn">refactored</span>(input) {</div>
               <div class="line">&nbsp;&nbsp;<span class="code-kw">if</span> (input == <span class="code-kw">null</span>) <span class="code-kw">return</span> [];</div>
               <div class="line">&nbsp;&nbsp;<span class="code-kw">return</span> input.map(normalize);</div>
               <div class="line">}</div>
-              <div class="line line-claude">● <span class="bidi">תרצה שאוסיף גם בדיקות?</span> <span class="caret">▍</span></div>
+              <div class="line line-claude line-rtl">● תרצה שאוסיף גם בדיקות? <span class="caret">▍</span></div>
             </div>
           </div>
         </div>

@@ -147,6 +147,14 @@ code {
   margin: 0 auto;
   box-shadow: 0 30px 60px -20px rgba(26, 26, 46, 0.18);
 }
+.hero-shot-img {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 30px 60px -20px rgba(26, 26, 46, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
 
 /* === Buttons === */
 .btn {
@@ -338,9 +346,17 @@ h2 {
   50% { opacity: 0; }
 }
 
-/* THE actual RTL part — what makes this site demo what the product does */
-.bidi {
+/* THE actual RTL part — what makes this site demo what the product does.
+   Applied to whole lines (not just spans) so the `>` / `●` prefix flips to
+   the right edge too, the way a real terminal row does when it contains
+   Hebrew. */
+.line-rtl {
   direction: rtl;
+  unicode-bidi: isolate;
+  text-align: right;
+}
+.line-rtl code {
+  direction: ltr;
   unicode-bidi: isolate;
 }
 
