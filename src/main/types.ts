@@ -6,6 +6,10 @@ export interface SessionMeta {
   createdAt: number
   tmuxName: string
   imported?: boolean
+  initialCommand?: string
+  // Set by init() when the backing tmux session is missing (e.g. after a reboot).
+  // Cleared on resurrect() when we spawn a fresh tmux session for the same metadata.
+  dead?: boolean
 }
 
 export interface CreateSessionOpts {

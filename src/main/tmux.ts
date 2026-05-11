@@ -157,17 +157,48 @@ export class TmuxManager extends EventEmitter {
 
   async init(): Promise<void> {
     const stored = loadSessions()
-    const live: SessionMeta[] = []
     for (const s of stored) {
-      const tmuxName = s.tmuxName ?? nativeTmuxName(s.id)
-      if (await tmuxSessionExistsByName(tmuxName)) {
-        live.push({ ...s, tmuxName })
+      s.tmuxName = s.tmuxName ?? nativeTmuxName(s.id)
+      if (await tmuxSessionExistsByName(s.tmuxName)) {
+        s.dead = false
         this.needsRedrawOnAttach.add(s.id)
+      } else {
+        // tmux server was killed (e.g. Mac reboot) — keep the metadata so the
+        // user doesn't lose their project list. attach() will resurrect on demand.
+        s.dead = true
       }
     }
-    this.sessions = live
+    this.sessions = stored
     saveSessions(this.sessions)
     this.startStatusTimer()
+  }
+
+  private async resurrect(s: SessionMeta): Promise<void> {
+    if (s.imported) {
+      throw new Error(
+        `Imported session "${s.name}" can't be auto-resurrected — re-import it from an existing tmux session.`
+      )
+    }
+    const lang = process.env.LANG || 'en_US.UTF-8'
+    const lcAll = process.env.LC_ALL || lang
+    const cwd = s.cwd && existsSync(s.cwd) ? s.cwd : process.env.HOME || '/'
+    await tmux(
+      'new-session',
+      '-d',
+      '-s', s.tmuxName,
+      '-c', cwd,
+      '-e', `LANG=${lang}`,
+      '-e', `LC_ALL=${lcAll}`,
+      '-e', `LC_CTYPE=${lcAll}`,
+      '-x', '200',
+      '-y', '50'
+    )
+    if (s.initialCommand) {
+      await tmux('send-keys', '-t', s.tmuxName, s.initialCommand, 'Enter')
+    }
+    s.dead = false
+    this.needsRedrawOnAttach.add(s.id)
+    saveSessions(this.sessions)
   }
 
   private startStatusTimer(): void {
@@ -280,7 +311,8 @@ export class TmuxManager extends EventEmitter {
       cwd: opts.cwd,
       color: opts.color ?? '#7c3aed',
       createdAt: Date.now(),
-      tmuxName
+      tmuxName,
+      initialCommand: opts.initialCommand
     }
     const lang = process.env.LANG || 'en_US.UTF-8'
     const lcAll = process.env.LC_ALL || lang
@@ -395,7 +427,7 @@ export class TmuxManager extends EventEmitter {
     const s = this.getSession(id)
     if (!s) throw new Error(`session ${id} not found`)
     if (!(await tmuxSessionExistsByName(s.tmuxName))) {
-      throw new Error(`tmux session ${s.tmuxName} not found`)
+      await this.resurrect(s)
     }
     await this.ensureMouseAndClipboard(s.tmuxName)
     const p = pty.spawn(
