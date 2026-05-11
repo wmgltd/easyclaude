@@ -149,14 +149,64 @@ export function App(): JSX.Element {
   const prevStatusRef = useRef<Record<string, SessionStatus>>({})
   const activeIdRef = useRef<string | null>(null)
   const sessionsRef = useRef<SessionMeta[]>([])
+  // Sessions the user has actually opened in this run. We lazy-mount
+  // TerminalView so a fresh launch with 10 sessions doesn't spin up 10
+  // xterm.js instances + IPC subscriptions before the user touches them.
+  // Once a session is visited it stays mounted to keep fast switching.
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(new Set())
+  // Awaiting alerts fire only after the status has been 'awaiting' for this
+  // long. Prevents a duplicate notification when Claude flickers awaiting →
+  // working → awaiting on a single message round-trip.
+  const awaitingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const AWAITING_DEBOUNCE_MS = 400
 
   useEffect(() => {
     activeIdRef.current = activeId
+    if (activeId) {
+      setVisitedIds((prev) => {
+        if (prev.has(activeId)) return prev
+        const next = new Set(prev)
+        next.add(activeId)
+        return next
+      })
+    }
   }, [activeId])
 
   useEffect(() => {
     sessionsRef.current = sessions
   }, [sessions])
+
+  // Forward renderer-side uncaught errors to the main-process log so we have
+  // a single place to look when something breaks on a user's machine.
+  useEffect(() => {
+    const onError = (e: ErrorEvent): void => {
+      window.api
+        .logRendererError({
+          kind: 'window.onerror',
+          message: e.message || String(e.error),
+          stack: e.error instanceof Error ? e.error.stack : undefined,
+          context: { filename: e.filename, lineno: e.lineno, colno: e.colno }
+        })
+        .catch(() => undefined)
+    }
+    const onRejection = (e: PromiseRejectionEvent): void => {
+      const reason = e.reason
+      const err = reason instanceof Error ? reason : new Error(String(reason))
+      window.api
+        .logRendererError({
+          kind: 'unhandledRejection',
+          message: err.message,
+          stack: err.stack
+        })
+        .catch(() => undefined)
+    }
+    window.addEventListener('error', onError)
+    window.addEventListener('unhandledrejection', onRejection)
+    return () => {
+      window.removeEventListener('error', onError)
+      window.removeEventListener('unhandledrejection', onRejection)
+    }
+  }, [])
 
   const refresh = useCallback(async () => {
     const list = await window.api.listSessions()
@@ -258,44 +308,97 @@ export function App(): JSX.Element {
     return window.api.onSessionExit((id) => {
       setSessions((prev) => prev.filter((s) => s.id !== id))
       setActiveId((prev) => (prev === id ? null : prev))
+      setVisitedIds((prev) => {
+        if (!prev.has(id)) return prev
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     })
   }, [])
 
   useEffect(() => {
+    const fireAwaitingAlerts = (id: string): void => {
+      // Status may have changed in the time between the debounce timer being
+      // set and now. Re-check before firing — the timer's cancel path should
+      // also have run, but belt-and-suspenders.
+      const cur = prevStatusRef.current[id]
+      if (cur !== 'awaiting') return
+      if (id === activeIdRef.current) return
+
+      setNeedsAttention((u) => new Set(u).add(id))
+      const s = settingsRef.current
+      const focused = document.hasFocus()
+      const quiet =
+        s.notifications.quietHoursEnabled &&
+        inQuietHours(s.notifications.quietHoursStart, s.notifications.quietHoursEnd)
+      const suppress = quiet || (s.notifications.onlyWhenUnfocused && focused)
+      if (!suppress && s.notifications.soundEnabled) {
+        playAwaitingSound(s.notifications.volume, s.notifications.soundType)
+      }
+      const session = sessionsRef.current.find((sess) => sess.id === id)
+      if (!suppress && s.notifications.systemNotifications) {
+        window.api.notifyAwaiting(id, session?.name ?? 'session').catch(() => undefined)
+      }
+      if (s.sessions.autoBookmarkOnAwaiting && session) {
+        const label = `auto: awaiting ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
+        window.api
+          .createBookmark(id, label)
+          .then(() => {
+            setBookmarksRefresh((n) => n + 1)
+          })
+          .catch(() => undefined)
+      }
+    }
+
     return window.api.onSessionStatus((id, status) => {
       setStatuses((prev) => {
         const prevStatus = prev[id]
         const next = { ...prev, [id]: status }
         const isActive = id === activeIdRef.current
+
+        // If status moves away from awaiting, cancel any pending alert that
+        // hasn't fired yet — Claude flickered, we don't want to spam.
+        if (status !== 'awaiting') {
+          const pending = awaitingTimersRef.current.get(id)
+          if (pending) {
+            clearTimeout(pending)
+            awaitingTimersRef.current.delete(id)
+          }
+        }
+
         if (!isActive) {
           if (prevStatus === 'working' && status === 'idle') {
             setUnseen((u) => new Set(u).add(id))
           }
           if (status === 'awaiting' && prevStatus !== 'awaiting') {
-            setNeedsAttention((u) => new Set(u).add(id))
-            const s = settingsRef.current
-            const focused = document.hasFocus()
-            const quiet = s.notifications.quietHoursEnabled
-              && inQuietHours(s.notifications.quietHoursStart, s.notifications.quietHoursEnd)
-            const suppress = quiet || (s.notifications.onlyWhenUnfocused && focused)
-            if (!suppress && s.notifications.soundEnabled) {
-              playAwaitingSound(s.notifications.volume, s.notifications.soundType)
-            }
-            const session = sessionsRef.current.find((sess) => sess.id === id)
-            if (!suppress && s.notifications.systemNotifications) {
-              window.api.notifyAwaiting(id, session?.name ?? 'session').catch(() => undefined)
-            }
-            if (s.sessions.autoBookmarkOnAwaiting && session) {
-              const label = `auto: awaiting ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
-              window.api.createBookmark(id, label).then(() => {
-                setBookmarksRefresh((n) => n + 1)
-              }).catch(() => undefined)
-            }
+            // Update prevStatusRef synchronously so the timer callback sees
+            // the right value when it re-checks.
+            prevStatusRef.current = next
+            const existing = awaitingTimersRef.current.get(id)
+            if (existing) clearTimeout(existing)
+            const handle = setTimeout(() => {
+              awaitingTimersRef.current.delete(id)
+              fireAwaitingAlerts(id)
+            }, AWAITING_DEBOUNCE_MS)
+            awaitingTimersRef.current.set(id, handle)
           }
         }
         prevStatusRef.current = next
         return next
       })
+    })
+  }, [])
+
+  // Cancel any pending awaiting timers when a session exits, to avoid firing
+  // notifications for sessions that no longer exist.
+  useEffect(() => {
+    return window.api.onSessionExit((id) => {
+      const pending = awaitingTimersRef.current.get(id)
+      if (pending) {
+        clearTimeout(pending)
+        awaitingTimersRef.current.delete(id)
+      }
     })
   }, [])
 
@@ -510,20 +613,26 @@ export function App(): JSX.Element {
             no sessions yet — hit <kbd>+</kbd> in the sidebar to start one
           </div>
         )}
-        {sessions.map((s) => (
-          <TerminalView
-            key={s.id}
-            session={s}
-            active={s.id === activeId}
-            fontSize={settings.appearance.fontSize}
-            fontFamily={settings.appearance.fontFamily}
-            lineHeight={settings.appearance.lineHeight}
-            cursorStyle={settings.appearance.cursorStyle}
-            cursorBlink={settings.appearance.cursorBlink}
-            theme={resolveTheme(settings.appearance)}
-            preferredIDE={settings.sessions.preferredIDE}
-          />
-        ))}
+        {sessions
+          // Only mount terminals the user has actually visited. Active id is
+          // always mounted (visitedIds is populated synchronously in the
+          // activeId effect, but include it here as a belt-and-suspenders so
+          // the first render after a switch never shows an empty pane).
+          .filter((s) => s.id === activeId || visitedIds.has(s.id))
+          .map((s) => (
+            <TerminalView
+              key={s.id}
+              session={s}
+              active={s.id === activeId}
+              fontSize={settings.appearance.fontSize}
+              fontFamily={settings.appearance.fontFamily}
+              lineHeight={settings.appearance.lineHeight}
+              cursorStyle={settings.appearance.cursorStyle}
+              cursorBlink={settings.appearance.cursorBlink}
+              theme={resolveTheme(settings.appearance)}
+              preferredIDE={settings.sessions.preferredIDE}
+            />
+          ))}
       </div>
       {showBookmarks && (
         <BookmarksPanel

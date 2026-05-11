@@ -1,26 +1,22 @@
 import { app } from 'electron'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { Bookmark } from './types'
+import { writeAtomic, loadWithFallback } from './atomic'
 
-const FILE = () => join(app.getPath('userData'), 'bookmarks.json')
+const FILE = (): string => join(app.getPath('userData'), 'bookmarks.json')
 
 function load(): Bookmark[] {
-  const path = FILE()
-  if (!existsSync(path)) return []
-  try {
-    const parsed = JSON.parse(readFileSync(path, 'utf8'))
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
+  return (
+    loadWithFallback<Bookmark[]>(FILE(), (raw) => {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? (parsed as Bookmark[]) : null
+    }) ?? []
+  )
 }
 
 function save(bookmarks: Bookmark[]): void {
-  const path = FILE()
-  mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(path, JSON.stringify(bookmarks, null, 2), 'utf8')
+  writeAtomic(FILE(), JSON.stringify(bookmarks, null, 2))
 }
 
 export class BookmarkStore {

@@ -193,7 +193,11 @@ const api = {
     return () => ipcRenderer.removeListener('menu:action', listener)
   },
 
-  getPathForFile: (file: File): string => webUtils.getPathForFile(file)
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
+
+  logRendererError: (entry: { kind: string; message: string; stack?: string; context?: Record<string, unknown> }): Promise<void> =>
+    ipcRenderer.invoke('errors:log-renderer', entry),
+  revealErrorLog: (): Promise<void> => ipcRenderer.invoke('errors:reveal-log')
 }
 
 contextBridge.exposeInMainWorld('api', api)

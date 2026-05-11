@@ -1,6 +1,6 @@
 import { app } from 'electron'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { join } from 'node:path'
+import { writeAtomic, loadWithFallback } from './atomic'
 
 export type ThemeName = 'default' | 'solarized-dark' | 'dracula' | 'nord' | 'light' | 'custom'
 export type CursorStyle = 'block' | 'underline' | 'bar'
@@ -131,14 +131,11 @@ export class SettingsStore {
   }
 
   private load(): Settings {
-    const path = FILE()
-    if (!existsSync(path)) return clone(DEFAULTS)
-    try {
-      const parsed = JSON.parse(readFileSync(path, 'utf8')) as Partial<Settings>
-      return deepMerge(clone(DEFAULTS), parsed)
-    } catch {
-      return clone(DEFAULTS)
-    }
+    const parsed = loadWithFallback<Partial<Settings>>(FILE(), (raw) => {
+      const out = JSON.parse(raw)
+      return out && typeof out === 'object' && !Array.isArray(out) ? (out as Partial<Settings>) : null
+    })
+    return parsed ? deepMerge(clone(DEFAULTS), parsed) : clone(DEFAULTS)
   }
 
   get(): Settings {
@@ -147,9 +144,7 @@ export class SettingsStore {
 
   save(next: Partial<Settings>): Settings {
     this.settings = deepMerge(this.settings, next)
-    const path = FILE()
-    mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(path, JSON.stringify(this.settings, null, 2), 'utf8')
+    writeAtomic(FILE(), JSON.stringify(this.settings, null, 2))
     return this.settings
   }
 }

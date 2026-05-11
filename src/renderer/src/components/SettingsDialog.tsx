@@ -782,6 +782,14 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, onShowO
               >
                 Claude Code
               </button>
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={() => window.api.revealErrorLog().catch(() => undefined)}
+                title="Open the userData folder containing error-log.txt and any crash dumps"
+              >
+                Show crash logs
+              </button>
               {onShowOnboarding && (
                 <button
                   type="button"

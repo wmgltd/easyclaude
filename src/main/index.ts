@@ -7,12 +7,17 @@ import { BookmarkStore } from './bookmarks'
 import { scanProjects } from './projects'
 import { SettingsStore, type Settings } from './settings'
 import { getActiveBlock } from './usage'
+import { initErrorLogging, appendErrorEntry, revealErrorLog } from './errorLog'
 import type { CreateSessionOpts, ImportSessionOpts } from './types'
 
 const isDev = !app.isPackaged
 
 app.setName('PikudClaude')
 app.setPath('userData', join(app.getPath('appData'), 'pikudclaude'))
+
+// Wire crash dumps + uncaught-error capture as early as possible so we catch
+// init-time crashes too.
+initErrorLogging()
 
 const ICON_PATH = isDev
   ? join(__dirname, '../../build/icon.png')
@@ -205,6 +210,11 @@ function wireIpc(): void {
 
   ipcMain.handle('app:get-version', () => app.getVersion())
   ipcMain.handle('app:open-external', (_e, url: string) => shell.openExternal(url))
+
+  ipcMain.handle('errors:log-renderer', (_e, entry: { kind: string; message: string; stack?: string; context?: Record<string, unknown> }) => {
+    appendErrorEntry({ source: 'renderer', ...entry })
+  })
+  ipcMain.handle('errors:reveal-log', () => revealErrorLog())
 
   ipcMain.handle('app:open-file', async (_e, opts: { path: string; line?: number; col?: number; cwd?: string; ide?: string }) => {
     const { resolve, isAbsolute } = await import('node:path')
