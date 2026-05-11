@@ -4,6 +4,18 @@ Multi-session terminal hub for Claude Code, backed by tmux.
 
 PikudClaude is a macOS desktop app that lets you orchestrate many Claude Code sessions side-by-side — switch between them with `⌘1`–`⌘9` or a fuzzy palette, get notified when Claude needs your input, and (uniquely) **type and read Hebrew, Arabic, and other right-to-left scripts correctly** — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based Electron terminals.
 
+## Latest release — v0.2.3
+
+[Download `PikudClaude-0.2.3-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.3) (macOS Apple Silicon, signed + notarized).
+
+**What's new**
+- **Display fixes.** Blank pane after re-opening onboarding is gone; `location.reload()` was replaced with a state-driven dialog re-mount, and the main→renderer IPC path now drops messages while a frame is mid-reload instead of crashing.
+- **Tmux client leak fixed.** TerminalView's async attach was racing the effect cleanup under React StrictMode, leaving orphan 80×24 tmux clients that shrank visible panes. Now cancelled if the effect tears down mid-flight.
+- **Fresh PikudClaude icon** rendered from SVG at every size.
+- **Internal rebrand.** `easyclaude` → `pikudclaude` across npm name, appId, userData path, tmux session prefix, and localStorage keys.
+
+> ⚠️ **Upgrading from v0.2.2:** the appId changed (`com.kobi.easyclaude` → `com.kobi.pikudclaude`), so macOS treats this as a separate app. No auto-update — download the DMG manually. New install starts with empty settings/sessions/bookmarks; old data still lives at `~/Library/Application Support/easyclaude/` if you want to reference it before deleting.
+
 ## Why
 
 Claude Code is great. Running half a dozen of them in different tmux windows is not. PikudClaude makes that workflow sane:
