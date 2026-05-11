@@ -55,7 +55,7 @@ function resolveTmuxBin(): string {
   )
 }
 
-const NATIVE_PREFIX = 'easyclaude-'
+const NATIVE_PREFIX = 'pikudclaude-'
 
 const nativeTmuxName = (id: string) => `${NATIVE_PREFIX}${id}`
 

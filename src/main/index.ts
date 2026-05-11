@@ -12,9 +12,7 @@ import type { CreateSessionOpts, ImportSessionOpts } from './types'
 const isDev = !app.isPackaged
 
 app.setName('PikudClaude')
-// Pin userData to the legacy 'easyclaude' directory so the EasyClaude → PikudClaude rebrand
-// doesn't orphan existing sessions, bookmarks, and settings.
-app.setPath('userData', join(app.getPath('appData'), 'easyclaude'))
+app.setPath('userData', join(app.getPath('appData'), 'pikudclaude'))
 
 const ICON_PATH = isDev
   ? join(__dirname, '../../build/icon.png')
@@ -29,6 +27,7 @@ if (process.platform === 'darwin' && isDev && existsSync(ICON_PATH)) {
 }
 
 let mainWindow: BrowserWindow | null = null
+let rendererReady = false
 const manager = new TmuxManager()
 const bookmarks = new BookmarkStore()
 const settings = new SettingsStore()
@@ -56,6 +55,14 @@ async function createWindow(): Promise<void> {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    rendererReady = false
+  })
+
+  mainWindow.webContents.on('did-start-loading', () => {
+    rendererReady = false
+  })
+  mainWindow.webContents.on('did-finish-load', () => {
+    rendererReady = true
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -249,10 +256,14 @@ function wireIpc(): void {
   })
 
   const safeSend = (channel: string, ...args: unknown[]): void => {
-    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (!mainWindow || mainWindow.isDestroyed() || !rendererReady) return
     const wc = mainWindow.webContents
     if (wc.isDestroyed()) return
-    wc.send(channel, ...args)
+    try {
+      wc.send(channel, ...args)
+    } catch {
+      /* renderer frame may be mid-dispose; drop the message */
+    }
   }
 
   manager.on('data', (id: string, data: string) => safeSend('tmux:data', id, data))

@@ -66,7 +66,7 @@ function inQuietHours(start: string, end: string, now = new Date()): boolean {
 const SIDEBAR_MIN = 180
 const SIDEBAR_MAX = 500
 const SIDEBAR_DEFAULT = 240
-const SIDEBAR_STORAGE_KEY = 'easyclaude.sidebarWidth'
+const SIDEBAR_STORAGE_KEY = 'pikudclaude.sidebarWidth'
 
 function loadSidebarWidth(): number {
   const v = Number(localStorage.getItem(SIDEBAR_STORAGE_KEY))
@@ -562,6 +562,13 @@ export function App(): JSX.Element {
             setSettingsInitialTab('notifications')
           }}
           onTestSound={(v, t) => playAwaitingSound(v, t)}
+          onShowOnboarding={async () => {
+            const saved = await window.api.saveSettings({ ui: { welcomeShown: false } })
+            setSettings(saved)
+            settingsRef.current = saved
+            setShowSettings(false)
+            setSettingsInitialTab('notifications')
+          }}
         />
       )}
       {showImportDialog && (

@@ -7,6 +7,7 @@ interface Props {
   onSave: (next: Settings) => void
   onCancel: () => void
   onTestSound: (volume: number, soundType: SoundType) => void
+  onShowOnboarding?: () => void
   initialTab?: SettingsTab
 }
 
@@ -39,7 +40,7 @@ function Hint({ text }: { text: string }): JSX.Element {
   )
 }
 
-export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initialTab = 'notifications' }: Props): JSX.Element {
+export function SettingsDialog({ initial, onSave, onCancel, onTestSound, onShowOnboarding, initialTab = 'notifications' }: Props): JSX.Element {
   const [draft, setDraft] = useState<Settings>(initial)
   const [tab, setTab] = useState<SettingsTab>(initialTab)
   const [appVersion, setAppVersion] = useState<string>('')
@@ -696,10 +697,10 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                   href="#"
                   onClick={(e) => {
                     e.preventDefault()
-                    window.api.openExternal('https://github.com/wmgltd/easyclaude')
+                    window.api.openExternal('https://github.com/wmgltd/PikudClaude')
                   }}
                 >
-                  github.com/wmgltd/easyclaude
+                  github.com/wmgltd/PikudClaude
                 </a>
               </div>
               <div className="about-label">License</div>
@@ -710,7 +711,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                   onClick={(e) => {
                     e.preventDefault()
                     window.api.openExternal(
-                      'https://github.com/wmgltd/easyclaude/blob/main/LICENSE'
+                      'https://github.com/wmgltd/PikudClaude/blob/main/LICENSE'
                     )
                   }}
                 >
@@ -760,7 +761,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 type="button"
                 className="settings-test-btn"
                 onClick={() =>
-                  window.api.openExternal('https://github.com/wmgltd/easyclaude/issues/new')
+                  window.api.openExternal('https://github.com/wmgltd/PikudClaude/issues/new')
                 }
               >
                 Report issue
@@ -769,7 +770,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 type="button"
                 className="settings-test-btn"
                 onClick={() =>
-                  window.api.openExternal('https://github.com/wmgltd/easyclaude/releases')
+                  window.api.openExternal('https://github.com/wmgltd/PikudClaude/releases')
                 }
               >
                 Releases
@@ -781,17 +782,16 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               >
                 Claude Code
               </button>
-              <button
-                type="button"
-                className="settings-test-btn"
-                onClick={async () => {
-                  await window.api.saveSettings({ ui: { welcomeShown: false } })
-                  location.reload()
-                }}
-                title="Re-show the welcome / onboarding dialog"
-              >
-                Show onboarding
-              </button>
+              {onShowOnboarding && (
+                <button
+                  type="button"
+                  className="settings-test-btn"
+                  onClick={onShowOnboarding}
+                  title="Re-show the welcome / onboarding dialog"
+                >
+                  Show onboarding
+                </button>
+              )}
             </div>
           </section>
           )}

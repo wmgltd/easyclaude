@@ -1,6 +1,6 @@
 {
-  "name": "easyclaude",
-  "version": "0.2.2",
+  "name": "pikudclaude",
+  "version": "0.2.3",
   "description": "Multi-session terminal hub for Claude Code, backed by tmux",
   "main": "./out/main/index.js",
   "author": "Kobi Sela <kobi@wmg.co.il>",
@@ -41,7 +41,7 @@
     "vite": "^5.4.11"
   },
   "build": {
-    "appId": "com.kobi.easyclaude",
+    "appId": "com.kobi.pikudclaude",
     "productName": "PikudClaude",
     "directories": {
       "buildResources": "build"

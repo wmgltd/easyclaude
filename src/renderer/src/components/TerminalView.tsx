@@ -186,6 +186,7 @@ export function TerminalView({
     bidiObserverRef.current = setupBidiObserver(host)
 
 
+    let cancelled = false
     const init = async () => {
       requestAnimationFrame(() => {
         try {
@@ -196,6 +197,7 @@ export function TerminalView({
       })
       const dims = fit.proposeDimensions() ?? { cols: 100, rows: 30 }
       await window.api.attachSession(session.id, dims.cols, dims.rows)
+      if (cancelled) return
       unsubRef.current = window.api.onSessionData((id, data) => {
         if (id === session.id) term.write(stripMouseTracking(data))
       })
@@ -215,7 +217,9 @@ export function TerminalView({
     init()
 
     return () => {
+      cancelled = true
       unsubRef.current?.()
+      unsubRef.current = null
       bidiObserverRef.current?.disconnect()
       bidiObserverRef.current = null
       term.dispose()

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ProjectInfo } from '../types'
 
 const COLORS = ['#7c3aed', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#14b8a6']
-const RECENT_KEY = 'easyclaude.recentProjects'
+const RECENT_KEY = 'pikudclaude.recentProjects'
 const RECENT_MAX = 6
 
 interface RecentProject {
