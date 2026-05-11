@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PikudClaude — Multi-session terminal hub for Claude Code</title>
+  <meta name="description" content="A macOS desktop app that orchestrates many Claude Code sessions side-by-side, with real Hebrew/RTL support missing from VSCode, Cursor, Hyper, and every other xterm.js terminal." />
+
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <link rel="apple-touch-icon" href="assets/icon-256.png" />
+
+  <meta property="og:title" content="PikudClaude" />
+  <meta property="og:description" content="Multi-session terminal hub for Claude Code, with real Hebrew/RTL support." />
+  <meta property="og:image" content="https://pikud.io/assets/icon-1024.png" />
+  <meta property="og:url" content="https://pikud.io" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="#top">
+        <img src="assets/icon.svg" width="28" height="28" alt="" />
+        <span>PikudClaude</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#rtl">Hebrew / RTL</a>
+        <a href="#stack">Stack</a>
+        <a class="nav-cta" href="https://github.com/wmgltd/PikudClaude/releases/latest">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <section class="hero">
+      <div class="container hero-inner">
+        <img class="hero-icon" src="assets/icon.svg" width="160" height="160" alt="PikudClaude icon" />
+        <h1>PikudClaude</h1>
+        <p class="tagline">Multi-session terminal hub for Claude Code.</p>
+        <p class="subtagline">Orchestrate many Claude Code sessions side-by-side on macOS — switch with <kbd>⌘1</kbd>–<kbd>⌘9</kbd>, get notified when Claude needs you, and type Hebrew correctly.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="https://github.com/wmgltd/PikudClaude/releases/latest">
+            Download for macOS
+            <span class="btn-sub">v0.2.3 · Apple Silicon · signed &amp; notarized</span>
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/wmgltd/PikudClaude">View on GitHub</a>
+        </div>
+        <div class="hero-shot">
+          <!-- TODO: replace with real app screenshot -->
+          <div class="placeholder placeholder-shot" aria-label="Screenshot placeholder">
+            <span>App screenshot · 1600×1000</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="why">
+      <div class="container">
+        <p class="eyebrow">Why</p>
+        <h2>Claude Code is great. Running six of them in tmux windows is not.</h2>
+        <p class="lede">PikudClaude puts every Claude Code session in one window. Sidebar to navigate, <kbd>⌘</kbd>+number to switch, drag to reorder. tmux keeps them alive in the background so sessions survive app restarts.</p>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="container">
+        <p class="eyebrow">Features</p>
+        <h2>Built for people who keep a lot of Claudes spinning.</h2>
+        <div class="feature-grid">
+
+          <article class="feature">
+            <div class="feature-icon">⌘K</div>
+            <h3>Command palette</h3>
+            <p>Fuzzy palette for every action. Session-only switcher on <kbd>⌘P</kbd>. <kbd>⌘1</kbd>–<kbd>⌘9</kbd> jumps directly.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">🔔</div>
+            <h3>Awaiting alerts</h3>
+            <p>Detects when Claude asks a numbered-options question and chimes / fires a macOS notification / bumps the dock badge — only when the session isn't focused.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">♻️</div>
+            <h3>Survives restarts</h3>
+            <p>tmux keeps sessions running in the background. PikudClaude re-attaches on launch and forces a clean redraw so Claude's TUI doesn't double-render.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">🔖</div>
+            <h3>Bookmarks &amp; search</h3>
+            <p>Bookmark any point in a session with <kbd>⌘B</kbd>. Search inside scrollback with <kbd>⌘F</kbd>. Auto-bookmark when Claude pauses awaiting input.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">🔗</div>
+            <h3>Click to open</h3>
+            <p>Click any <code>path/to/file.ts:42</code> in the terminal output to open it in Cursor or VSCode at the exact line.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">🎨</div>
+            <h3>Themes &amp; fonts</h3>
+            <p>Default, Solarized Dark, Dracula, Nord, Light, or fully custom. Font picker with Hebrew-friendly options. Quiet hours for notifications.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="rtl" class="rtl">
+      <div class="container rtl-inner">
+        <div class="rtl-copy">
+          <p class="eyebrow eyebrow-light">The differentiator</p>
+          <h2>Hebrew and Arabic, actually working.</h2>
+          <p class="lede lede-light">
+            xterm.js <a href="https://github.com/xtermjs/xterm.js/issues/701">issue #701</a> ("Support RTL languages") has been open since 2017. Every Electron terminal that uses xterm.js inherits the gap — VSCode, Cursor, Hyper, Tabby, Wave, Mux. iTerm2 and WezTerm have their own RTL bugs. Only Terminal.app handles bidi properly, and it has no multi-session UX.
+          </p>
+          <p class="lede lede-light">
+            PikudClaude solves it via the DOM renderer + a <code>MutationObserver</code> on xterm rows + targeted <code>direction: rtl; unicode-bidi: isolate</code>. Not a full UAX#9 implementation, but enough that you can read Claude's Hebrew responses and type Hebrew into the prompt without giving up on your first language.
+          </p>
+        </div>
+
+        <div class="rtl-demo" aria-label="Terminal demo with Hebrew text flowing right-to-left">
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+              <span class="terminal-title">claude — pikudclaude</span>
+            </div>
+            <div class="terminal-body">
+              <div class="line"><span class="prompt">$</span> claude</div>
+              <div class="line">&gt; <span class="bidi">תוכל לעזור לי לרפקטר את הפונקציה הזאת?</span></div>
+              <div class="line line-claude">● <span class="bidi">בטח! הנה גרסה משופרת שמטפלת ב־<code>null</code> כראוי:</span></div>
+              <div class="line"><span class="code-kw">function</span> <span class="code-fn">refactored</span>(input) {</div>
+              <div class="line">&nbsp;&nbsp;<span class="code-kw">if</span> (input == <span class="code-kw">null</span>) <span class="code-kw">return</span> [];</div>
+              <div class="line">&nbsp;&nbsp;<span class="code-kw">return</span> input.map(normalize);</div>
+              <div class="line">}</div>
+              <div class="line line-claude">● <span class="bidi">תרצה שאוסיף גם בדיקות?</span> <span class="caret">▍</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack" class="stack">
+      <div class="container">
+        <p class="eyebrow">Stack</p>
+        <h2>Boring, on purpose.</h2>
+        <ul class="stack-list">
+          <li><strong>Electron 33</strong> + Vite (electron-vite)</li>
+          <li><strong>React 18</strong> + TypeScript</li>
+          <li><strong>xterm.js 5.5</strong> DOM renderer + fit/search/clipboard/web-links addons</li>
+          <li><strong>node-pty</strong> for the actual PTY</li>
+          <li><strong>tmux</strong> (system-installed) as the session-persistence layer</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container cta-inner">
+        <h2>Ready to herd some Claudes?</h2>
+        <a class="btn btn-primary btn-big" href="https://github.com/wmgltd/PikudClaude/releases/latest">
+          Download PikudClaude v0.2.3
+          <span class="btn-sub">macOS Apple Silicon · 100 MB</span>
+        </a>
+        <p class="cta-note">Requires macOS 12+ on Apple Silicon and <code>brew install tmux</code>.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="assets/icon.svg" width="24" height="24" alt="" />
+        <span>PikudClaude</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/wmgltd/PikudClaude">GitHub</a>
+        <a href="https://github.com/wmgltd/PikudClaude/releases">Releases</a>
+        <a href="https://github.com/wmgltd/PikudClaude/issues">Issues</a>
+      </div>
+      <div class="footer-credit">
+        Built by <a href="https://wmg.co.il">WMG</a> · Not affiliated with Anthropic
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
