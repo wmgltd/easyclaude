@@ -511,6 +511,7 @@ input[type="text"]:focus {
 .dialog-tabs {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
   border-bottom: 1px solid var(--border);
   margin: -4px -4px 16px;
@@ -522,11 +523,12 @@ input[type="text"]:focus {
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-dim);
-  padding: 8px 12px;
+  padding: 8px 10px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
   margin-bottom: -1px;
+  white-space: nowrap;
 }
 
 .dialog-tab:hover {
