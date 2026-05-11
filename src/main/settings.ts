@@ -26,6 +26,7 @@ export interface Settings {
     recentProjectsMax: number
     preferredIDE: 'cursor' | 'vscode' | 'finder'
     initialCommandsLibrary: string[]
+    projectsRoot: string
   }
   appearance: {
     fontSize: number
@@ -68,7 +69,8 @@ const DEFAULTS: Settings = {
     autoBookmarkOnAwaiting: false,
     recentProjectsMax: 6,
     preferredIDE: 'cursor',
-    initialCommandsLibrary: ['claude', 'claude --resume', 'claude --continue']
+    initialCommandsLibrary: ['claude', 'claude --resume', 'claude --continue'],
+    projectsRoot: ''
   },
   appearance: {
     fontSize: 13,

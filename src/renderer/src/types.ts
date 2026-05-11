@@ -55,6 +55,7 @@ export interface Settings {
     recentProjectsMax: number
     preferredIDE: 'cursor' | 'vscode' | 'finder'
     initialCommandsLibrary: string[]
+    projectsRoot: string
   }
   appearance: {
     fontSize: number

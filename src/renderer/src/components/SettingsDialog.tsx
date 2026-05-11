@@ -31,6 +31,14 @@ const FONT_OPTIONS: Array<{ label: string; value: string; note?: string }> = [
 
 type SettingsTab = 'notifications' | 'sessions' | 'appearance' | 'shortcuts' | 'updates' | 'about'
 
+function Hint({ text }: { text: string }): JSX.Element {
+  return (
+    <span className="settings-hint-icon" title={text} aria-label={text}>
+      ⓘ
+    </span>
+  )
+}
+
 export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initialTab = 'notifications' }: Props): JSX.Element {
   const [draft, setDraft] = useState<Settings>(initial)
   const [tab, setTab] = useState<SettingsTab>(initialTab)
@@ -88,6 +96,11 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
   const browseCwd = async (): Promise<void> => {
     const picked = await window.api.pickDirectory()
     if (picked) update('sessions', { defaultCwd: picked })
+  }
+
+  const browseProjectsRoot = async (): Promise<void> => {
+    const picked = await window.api.pickDirectory()
+    if (picked) update('sessions', { projectsRoot: picked })
   }
 
   const onPickTheme = (t: ThemeName): void => {
@@ -161,6 +174,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('notifications', { soundEnabled: e.target.checked })}
               />
               <span>Sound on awaiting</span>
+              <Hint text="Plays a chime/beep whenever Claude is waiting for your input on a session that isn't currently active." />
               <select
                 className="settings-input settings-input-narrow"
                 value={draft.notifications.soundType}
@@ -208,6 +222,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('notifications', { systemNotifications: e.target.checked })}
               />
               <span>System notifications + dock bounce</span>
+              <Hint text="macOS notification banner + the dock icon bounces when Claude is awaiting. Click the notification to focus that session." />
             </label>
             <label className="settings-row">
               <input
@@ -216,6 +231,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('notifications', { onlyWhenUnfocused: e.target.checked })}
               />
               <span>Only when window is unfocused</span>
+              <Hint text="Suppress alerts while PikudClaude is the active application — useful so you don't get notified for sessions you're already watching." />
             </label>
             <label className="settings-row">
               <input
@@ -224,6 +240,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('notifications', { quietHoursEnabled: e.target.checked })}
               />
               <span>Quiet hours</span>
+              <Hint text="Suppress all sound and system notifications during the configured time window (e.g., overnight)." />
               <input
                 type="time"
                 className="settings-input settings-input-narrow"
@@ -247,7 +264,10 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
           <section className="settings-section">
             <h3>Sessions</h3>
             <label className="settings-row">
-              <span className="settings-label">Default command</span>
+              <span className="settings-label">
+                Default command
+                <Hint text="Auto-runs in every new session right after the shell starts (e.g. 'claude' or 'claude --resume'). Leave empty to start with a plain shell." />
+              </span>
               <input
                 type="text"
                 className="settings-input"
@@ -257,7 +277,10 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               />
             </label>
             <div className="settings-row settings-row-stack">
-              <span className="settings-label">Commands library</span>
+              <span className="settings-label">
+                Commands library
+                <Hint text="Quick-pick presets shown when creating a new session. Common entries: 'claude', 'claude --resume', 'claude --continue'." />
+              </span>
               <div className="cmd-library">
                 {draft.sessions.initialCommandsLibrary.map((cmd, i) => (
                   <div className="cmd-library-row" key={i}>
@@ -300,13 +323,32 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               </div>
             </div>
             <label className="settings-row">
-              <span className="settings-label">Default cwd</span>
+              <span className="settings-label">
+                Projects folder
+                <Hint text="Parent folder where you keep your code projects. Used to populate the New Session picker with your projects, and as the default cwd if none is set." />
+              </span>
+              <input
+                type="text"
+                className="settings-input"
+                value={draft.sessions.projectsRoot}
+                onChange={(e) => update('sessions', { projectsRoot: e.target.value })}
+                placeholder="(parent folder of your projects)"
+              />
+              <button type="button" className="settings-test-btn" onClick={browseProjectsRoot}>
+                browse
+              </button>
+            </label>
+            <label className="settings-row">
+              <span className="settings-label">
+                Default cwd
+                <Hint text="Starting directory for new sessions when you don't pick one. Falls back to the projects folder if empty." />
+              </span>
               <input
                 type="text"
                 className="settings-input"
                 value={draft.sessions.defaultCwd}
                 onChange={(e) => update('sessions', { defaultCwd: e.target.value })}
-                placeholder="(none)"
+                placeholder="(uses projects folder)"
               />
               <button type="button" className="settings-test-btn" onClick={browseCwd}>
                 browse
@@ -332,9 +374,13 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('sessions', { autoBookmarkOnAwaiting: e.target.checked })}
               />
               <span>Auto-bookmark on awaiting</span>
+              <Hint text="Automatically save a bookmark each time Claude pauses to ask you something — handy for jumping back to recent decision points." />
             </label>
             <label className="settings-row">
-              <span className="settings-label">Recent projects max</span>
+              <span className="settings-label">
+                Recent projects max
+                <Hint text="How many recently-used project paths to remember and display in the New Session dialog." />
+              </span>
               <input
                 type="number"
                 className="settings-input settings-input-narrow"
@@ -349,7 +395,10 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
               />
             </label>
             <label className="settings-row">
-              <span className="settings-label">Open file paths in</span>
+              <span className="settings-label">
+                Open file paths in
+                <Hint text="Which app to launch when you click a 'path/file.ts:42' link in the terminal output." />
+              </span>
               <select
                 className="settings-input"
                 value={draft.sessions.preferredIDE}
@@ -565,7 +614,10 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
           <section className="settings-section">
             <h3>Updates</h3>
             <div className="settings-row">
-              <span>Update channel</span>
+              <span>
+                Update channel
+                <Hint text="Stable: only signed, fully-tested releases. Beta: includes pre-release versions for early testing — may contain bugs." />
+              </span>
               <div className="seg-control">
                 <button
                   type="button"
@@ -596,6 +648,7 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onChange={(e) => update('updates', { autoCheck: e.target.checked })}
               />
               <span>Check for updates automatically on launch</span>
+              <Hint text="When enabled, PikudClaude checks GitHub for a newer release on every launch. Updates download in the background and install on next quit." />
             </label>
             <div className="settings-row">
               <span>Current version</span>
@@ -727,6 +780,17 @@ export function SettingsDialog({ initial, onSave, onCancel, onTestSound, initial
                 onClick={() => window.api.openExternal('https://github.com/anthropics/claude-code')}
               >
                 Claude Code
+              </button>
+              <button
+                type="button"
+                className="settings-test-btn"
+                onClick={async () => {
+                  await window.api.saveSettings({ ui: { welcomeShown: false } })
+                  location.reload()
+                }}
+                title="Re-show the welcome / onboarding dialog"
+              >
+                Show onboarding
               </button>
             </div>
           </section>

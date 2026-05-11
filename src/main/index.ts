@@ -152,7 +152,10 @@ function wireIpc(): void {
     bookmarks.remove(id)
   })
 
-  ipcMain.handle('projects:scan', () => scanProjects())
+  ipcMain.handle('projects:scan', () => {
+    const root = settings.get().sessions.projectsRoot
+    return scanProjects(root ? [root] : undefined)
+  })
 
   ipcMain.handle('settings:get', () => settings.get())
   ipcMain.handle('settings:save', (_e, next: Partial<Settings>) => settings.save(next))

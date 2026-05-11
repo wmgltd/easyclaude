@@ -586,8 +586,16 @@ export function App(): JSX.Element {
       )}
       {!settings.ui.welcomeShown && (
         <WelcomeDialog
-          onDismiss={async () => {
-            const saved = await window.api.saveSettings({ ui: { welcomeShown: true } })
+          onDismiss={async (projectsRoot) => {
+            const patch: Partial<Settings> = { ui: { welcomeShown: true } }
+            if (projectsRoot) {
+              patch.sessions = {
+                ...(settings?.sessions ?? {}),
+                projectsRoot,
+                defaultCwd: settings?.sessions.defaultCwd || projectsRoot
+              } as Settings['sessions']
+            }
+            const saved = await window.api.saveSettings(patch)
             setSettings(saved)
             settingsRef.current = saved
           }}

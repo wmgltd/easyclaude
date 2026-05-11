@@ -1,58 +1,80 @@
+import { useState } from 'react'
+import { basename } from '../utils/path'
+
 interface Props {
-  onDismiss: () => void
+  onDismiss: (projectsRoot: string) => void
 }
 
 export function WelcomeDialog({ onDismiss }: Props): JSX.Element {
+  const [projectsRoot, setProjectsRoot] = useState<string>('')
+
+  const browse = async (): Promise<void> => {
+    const picked = await window.api.pickDirectory()
+    if (picked) setProjectsRoot(picked)
+  }
+
+  const finish = (): void => {
+    onDismiss(projectsRoot.trim())
+  }
+
   return (
     <div className="dialog-backdrop">
       <div className="dialog welcome-dialog">
         <div className="welcome-header">
-          <div className="welcome-logo">⌘</div>
+          <div className="welcome-logo">📁</div>
           <h2>Welcome to PikudClaude</h2>
-          <p className="welcome-tagline">Multi-session terminal hub for Claude Code, backed by tmux.</p>
+          <p className="welcome-tagline">
+            Pick the parent folder where you keep all your code projects —
+            we'll use it as the default for new sessions.
+          </p>
         </div>
 
-        <div className="welcome-features">
-          <div className="welcome-feature">
-            <div className="welcome-icon">⌘K</div>
-            <div className="welcome-feature-body">
-              <h4>Command palette</h4>
-              <p>Jump to any session or run an action. <kbd>⌘P</kbd> filters to sessions only.</p>
-            </div>
+        <div className="welcome-picker">
+          <div className="welcome-picker-row">
+            <input
+              type="text"
+              className="settings-input"
+              value={projectsRoot}
+              onChange={(e) => setProjectsRoot(e.target.value)}
+              placeholder="e.g. /Users/you/code"
+              autoFocus
+            />
+            <button type="button" className="primary welcome-browse" onClick={browse}>
+              Browse…
+            </button>
           </div>
-          <div className="welcome-feature">
-            <div className="welcome-icon">↓</div>
-            <div className="welcome-feature-body">
-              <h4>Drag-drop sessions</h4>
-              <p>Reorder sessions in the sidebar by dragging. Click the colored dot to recolor.</p>
+          {projectsRoot && (
+            <div className="welcome-picker-preview">
+              <span className="welcome-picker-label">Selected:</span>
+              <span className="welcome-picker-path" title={projectsRoot}>
+                {basename(projectsRoot) || projectsRoot}
+              </span>
+              <span className="welcome-picker-full">{projectsRoot}</span>
             </div>
-          </div>
-          <div className="welcome-feature">
-            <div className="welcome-icon">★</div>
-            <div className="welcome-feature-body">
-              <h4>Hebrew, Arabic, RTL</h4>
-              <p>PikudClaude renders right-to-left scripts correctly — a feature missing from VSCode, Cursor, Hyper, and other xterm.js terminals.</p>
-            </div>
-          </div>
-          <div className="welcome-feature">
-            <div className="welcome-icon">🔔</div>
-            <div className="welcome-feature-body">
-              <h4>Awaiting alerts</h4>
-              <p>Chime + macOS notification when Claude needs your input on a non-active session. Configurable in <kbd>⌘,</kbd>.</p>
-            </div>
-          </div>
+          )}
+          <p className="settings-hint">
+            You can change this later in Settings → Sessions.
+          </p>
         </div>
 
-        <div className="welcome-shortcuts">
-          <strong>Quick shortcuts:</strong>
-          <span><kbd>⌘N</kbd> new session</span>
-          <span><kbd>⌘1</kbd>–<kbd>⌘9</kbd> jump</span>
-          <span><kbd>⌘F</kbd> find</span>
-          <span><kbd>⌘B</kbd> bookmark</span>
+        <div className="welcome-summary">
+          <div className="welcome-summary-row">
+            <kbd>⌘N</kbd> new session
+            <span className="dot">·</span>
+            <kbd>⌘1</kbd>–<kbd>⌘9</kbd> jump
+            <span className="dot">·</span>
+            <kbd>⌘K</kbd> palette
+            <span className="dot">·</span>
+            <kbd>⌘F</kbd> find
+          </div>
+          <div className="welcome-summary-row dim">
+            Hebrew/RTL · multi-session tmux · awaiting alerts · auto-update
+          </div>
         </div>
 
         <div className="dialog-actions">
-          <button className="primary" onClick={onDismiss}>
+          <button onClick={finish}>Skip for now</button>
+          <button className="primary" disabled={!projectsRoot.trim()} onClick={finish}>
             Get started
           </button>
         </div>

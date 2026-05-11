@@ -661,6 +661,81 @@ input[type="text"]:focus {
   margin: 0 1px;
 }
 
+.welcome-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.welcome-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+.welcome-summary-row.dim {
+  font-size: 11px;
+  opacity: 0.65;
+}
+.welcome-summary-row .dot { opacity: 0.4; }
+.welcome-summary kbd {
+  background: #16161e;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.welcome-browse {
+  white-space: nowrap;
+}
+
+.welcome-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.welcome-picker-row {
+  display: flex;
+  gap: 8px;
+}
+.welcome-picker-row .settings-input {
+  flex: 1;
+}
+.welcome-picker-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.welcome-picker-label {
+  color: var(--text-muted, #9ca3af);
+}
+.welcome-picker-path {
+  color: #c4b5fd;
+  font-weight: 600;
+}
+.welcome-picker-full {
+  color: var(--text-dim);
+  font-family: 'SF Mono', monospace;
+  font-size: 11px;
+  width: 100%;
+  word-break: break-all;
+}
+
 .shortcuts-grid {
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -897,6 +972,26 @@ input[type="text"]:focus {
   font-size: 11px;
   opacity: 0.6;
   margin: 4px 0 0;
+}
+.settings-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--text-muted, #9ca3af);
+  cursor: help;
+  user-select: none;
+  vertical-align: text-bottom;
+  opacity: 0.6;
+  transition: opacity 150ms ease, color 150ms ease;
+}
+.settings-hint-icon:hover {
+  opacity: 1;
+  color: #a78bfa;
 }
 .cmd-library {
   display: flex;
