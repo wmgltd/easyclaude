@@ -4,11 +4,18 @@ Multi-session terminal hub for Claude Code, backed by tmux.
 
 PikudClaude is a macOS desktop app that lets you orchestrate many Claude Code sessions side-by-side — switch between them with `⌘1`–`⌘9` or a fuzzy palette, get notified when Claude needs your input, and (uniquely) **type and read Hebrew, Arabic, and other right-to-left scripts correctly** — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based Electron terminals.
 
-## Latest release — v0.2.4
+## Latest release — v0.2.5
 
-[Download `PikudClaude-0.2.4-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.4) (macOS Apple Silicon, signed + notarized) · landing page at [pikud.io](https://pikud.io).
+[Download `PikudClaude-0.2.5-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.5) (macOS Apple Silicon, signed + notarized) · landing page at [pikud.io](https://pikud.io).
 
-**What's new — robustness pass**
+**What's new**
+- **In-app update prompt.** When the auto-updater finds a new release on launch, an "Update available" dialog pops up — shows download progress, then offers **Update now** (graceful quit + relaunch on the new version) or **Skip** (install on next quit anyway). Previously the status was buried in Settings → Updates and easy to miss.
+- **Settings dialog tab fix.** The six-tab row (Notifications / Sessions / Appearance / Shortcuts / Updates / About) was overflowing horizontally and rendering the "About" tab outside the modal box on the dark background. Tabs now wrap on overflow and have tighter padding.
+
+## Earlier — v0.2.4
+
+[Download `PikudClaude-0.2.4-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.4).
+
 - **Atomic writes + rotating backups** for `sessions.json`, `settings.json`, `bookmarks.json`. A crash mid-write can no longer corrupt the file; if the canonical file is unreadable we walk three rotating `.bak.N` snapshots and recover.
 - **Crash + error logging.** Native crashes land in `userData/crashes` (local-only, never uploaded). Uncaught main and renderer errors append to a rotating `userData/error-log.txt`. New "Show crash logs" button in Settings → About reveals the folder.
 - **Awaiting alerts now debounced 400ms.** Sound + notification + dock badge only fire if the session stays awaiting through the window, preventing duplicate alerts when Claude's TUI flickers awaiting→working→awaiting on a single round-trip.
