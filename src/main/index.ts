@@ -216,6 +216,12 @@ function wireIpc(): void {
   })
   ipcMain.handle('errors:reveal-log', () => revealErrorLog())
 
+  ipcMain.handle('updates:install-now', () => {
+    // Quit gracefully (firing before-quit, which flushes session state via
+    // manager.dispose) and then relaunch with the staged update applied.
+    autoUpdater.quitAndInstall(false, true)
+  })
+
   ipcMain.handle('app:open-file', async (_e, opts: { path: string; line?: number; col?: number; cwd?: string; ide?: string }) => {
     const { resolve, isAbsolute } = await import('node:path')
     const abs = isAbsolute(opts.path)

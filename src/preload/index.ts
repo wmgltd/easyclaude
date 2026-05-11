@@ -197,7 +197,9 @@ const api = {
 
   logRendererError: (entry: { kind: string; message: string; stack?: string; context?: Record<string, unknown> }): Promise<void> =>
     ipcRenderer.invoke('errors:log-renderer', entry),
-  revealErrorLog: (): Promise<void> => ipcRenderer.invoke('errors:reveal-log')
+  revealErrorLog: (): Promise<void> => ipcRenderer.invoke('errors:reveal-log'),
+
+  installUpdateNow: (): Promise<void> => ipcRenderer.invoke('updates:install-now')
 }
 
 contextBridge.exposeInMainWorld('api', api)

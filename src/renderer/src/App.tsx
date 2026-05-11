@@ -8,6 +8,7 @@ import { CommandPalette } from './components/CommandPalette'
 import type { PaletteAction } from './components/CommandPalette'
 import { BookmarksPanel } from './components/BookmarksPanel'
 import { SettingsDialog } from './components/SettingsDialog'
+import { UpdateAvailableDialog } from './components/UpdateAvailableDialog'
 import { WelcomeDialog } from './components/WelcomeDialog'
 import type { SessionMeta, SessionStatus, Settings } from './types'
 import { resolveTheme } from './types'
@@ -158,6 +159,18 @@ export function App(): JSX.Element {
   // long. Prevents a duplicate notification when Claude flickers awaiting →
   // working → awaiting on a single message round-trip.
   const awaitingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+
+  // Update prompt — shows a dialog whenever the auto-updater finds a new
+  // version on launch. "Skip" hides it for the rest of this session; the
+  // update still installs on next quit (autoInstallOnAppQuit). Reset by
+  // restarting the app.
+  const [updateInfo, setUpdateInfo] = useState<{
+    version: string
+    state: 'downloading' | 'ready'
+    progressPercent?: number
+  } | null>(null)
+  const [updateSkipped, setUpdateSkipped] = useState(false)
+  const updateSkippedRef = useRef(false)
   const AWAITING_DEBOUNCE_MS = 400
 
   useEffect(() => {
@@ -175,6 +188,33 @@ export function App(): JSX.Element {
   useEffect(() => {
     sessionsRef.current = sessions
   }, [sessions])
+
+  // Listen for updater status from the main process. We watch globally so
+  // the in-app update prompt opens at any time during the session — even
+  // when Settings is closed. Skip dismisses for the session only; the
+  // update still installs on next quit (autoInstallOnAppQuit is true).
+  useEffect(() => {
+    return window.api.onUpdateStatus((status, payload) => {
+      if (updateSkippedRef.current) return
+
+      if (status === 'available' && payload && typeof payload === 'object' && 'version' in payload) {
+        const version = String((payload as { version: unknown }).version || '')
+        setUpdateInfo({ version, state: 'downloading' })
+        return
+      }
+      if (status === 'downloading' && payload && typeof payload === 'object' && 'percent' in payload) {
+        const percent = (payload as { percent: number }).percent
+        setUpdateInfo((prev) =>
+          prev ? { ...prev, state: 'downloading', progressPercent: percent } : prev
+        )
+        return
+      }
+      if (status === 'downloaded') {
+        setUpdateInfo((prev) => (prev ? { ...prev, state: 'ready' } : prev))
+        return
+      }
+    })
+  }, [])
 
   // Forward renderer-side uncaught errors to the main-process log so we have
   // a single place to look when something breaks on a user's machine.
@@ -714,6 +754,18 @@ export function App(): JSX.Element {
             const saved = await window.api.saveSettings(patch)
             setSettings(saved)
             settingsRef.current = saved
+          }}
+        />
+      )}
+      {updateInfo && !updateSkipped && (
+        <UpdateAvailableDialog
+          version={updateInfo.version}
+          state={updateInfo.state}
+          progressPercent={updateInfo.progressPercent}
+          onUpdateNow={() => window.api.installUpdateNow()}
+          onSkip={() => {
+            updateSkippedRef.current = true
+            setUpdateSkipped(true)
           }}
         />
       )}

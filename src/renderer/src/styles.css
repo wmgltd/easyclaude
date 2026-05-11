@@ -560,6 +560,25 @@ input[type="text"]:focus {
   padding: 28px;
 }
 
+.update-available-dialog {
+  width: 440px;
+}
+.update-available-dialog h2 {
+  margin-bottom: 4px;
+}
+.update-headline {
+  font-size: 13px;
+  color: var(--text);
+  margin: 8px 0 12px;
+  font-weight: 500;
+}
+.update-body {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0 0 8px;
+}
+
 .welcome-header {
   text-align: center;
   margin-bottom: 22px;
