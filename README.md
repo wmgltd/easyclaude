@@ -8,13 +8,20 @@ PikudClaude is a macOS desktop app that lets you orchestrate many Claude Code se
   <img src="https://pikud.io/assets/terminal-demo.svg" alt="Animated PikudClaude demo: type in one project, switch to another, ask in Hebrew, read a Hebrew + English answer, open Settings" width="100%" />
 </p>
 
-## Latest release — v0.2.5
+## Latest release — v0.2.6
 
-[Download `PikudClaude-0.2.5-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.5) (macOS Apple Silicon, signed + notarized) · landing page at [pikud.io](https://pikud.io).
+[Download `PikudClaude-0.2.6-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.6) (macOS Apple Silicon, signed + notarized) · landing page at [pikud.io](https://pikud.io).
 
-**What's new**
-- **In-app update prompt.** When the auto-updater finds a new release on launch, an "Update available" dialog pops up — shows download progress, then offers **Update now** (graceful quit + relaunch on the new version) or **Skip** (install on next quit anyway). Previously the status was buried in Settings → Updates and easy to miss.
-- **Settings dialog tab fix.** The six-tab row (Notifications / Sessions / Appearance / Shortcuts / Updates / About) was overflowing horizontally and rendering the "About" tab outside the modal box on the dark background. Tabs now wrap on overflow and have tighter padding.
+**What's new — copy & Ctrl+C behavior**
+- **No more auto-copy on mouse select.** Selecting text in the terminal used to silently overwrite the clipboard on `mouseup`. Now selection stays as just selection — press `⌘C` when you actually want it copied. Matches the convention of every other macOS terminal.
+- **`Ctrl+C` always sends SIGINT.** Previously the copy handler intercepted both `⌘C` and `Ctrl+C`, which meant Ctrl+C silently stopped interrupting Claude whenever you had text highlighted. Now only `⌘C` is intercepted for copy; `Ctrl+C` is always passed through.
+
+## Earlier — v0.2.5
+
+[Download `PikudClaude-0.2.5-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.5).
+
+- **In-app update prompt.** When the auto-updater finds a new release on launch, an "Update available" dialog pops up — shows download progress, then offers **Update now** or **Skip**.
+- **Settings dialog tab fix.** The six-tab row was overflowing horizontally and rendering the "About" tab outside the modal box. Tabs now wrap on overflow.
 
 ## Earlier — v0.2.4
 
