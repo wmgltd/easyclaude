@@ -87,32 +87,31 @@ export function TerminalView({
     term.open(host)
 
     term.attachCustomKeyEventHandler((ev) => {
-      if (ev.type === 'keydown' && ev.key === 'Enter' && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && !ev.altKey) {
+      if (ev.type !== 'keydown') return true
+
+      // Shift+Enter — multiline submit marker into Claude's TUI
+      if (ev.key === 'Enter' && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && !ev.altKey) {
         window.api.writeSession(session.id, '\x1b\r')
         return false
       }
-      if (ev.type === 'keydown' && (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey && ev.key.toLowerCase() === 'c') {
+
+      // ⌘C or ⌘⇧C — copy current selection. We don't intercept plain Ctrl+C:
+      // that has to stay reserved for SIGINT, otherwise users can't interrupt
+      // a running Claude when they happen to have something selected.
+      const isCmdC = ev.metaKey && !ev.ctrlKey && !ev.altKey && ev.key.toLowerCase() === 'c'
+      if (isCmdC) {
         const sel = term.getSelection()
-        if (sel) {
-          navigator.clipboard.writeText(sel).catch(() => undefined)
-          return false
-        }
+        if (sel) navigator.clipboard.writeText(sel).catch(() => undefined)
+        return false
       }
+
       return true
     })
 
-    let pendingSelection = ''
-    term.onSelectionChange(() => {
-      const s = term.getSelection()
-      if (s && s.length > 0) pendingSelection = s
-    })
-    host.addEventListener('mouseup', () => {
-      if (pendingSelection) {
-        const text = pendingSelection
-        pendingSelection = ''
-        navigator.clipboard.writeText(text).catch(() => undefined)
-      }
-    })
+    // Note: we deliberately do NOT auto-copy on mouseup. Selecting text just
+    // selects it; the user explicitly presses ⌘C when they want it on the
+    // clipboard. This matches macOS Terminal / Cursor / VSCode behavior and
+    // avoids surprise clipboard overwrites.
 
     let wheelAccum = 0
     term.attachCustomWheelEventHandler((ev) => {
