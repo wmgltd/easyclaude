@@ -3,6 +3,7 @@ import { autoUpdater } from 'electron-updater'
 import { join } from 'node:path'
 import { existsSync } from 'node:fs'
 import { TmuxManager } from './tmux'
+import { ZellijManager } from './win32/zellijManager'
 import { BookmarkStore } from './bookmarks'
 import { scanProjects } from './projects'
 import { SettingsStore, type Settings } from './settings'
@@ -33,7 +34,13 @@ if (process.platform === 'darwin' && isDev && existsSync(ICON_PATH)) {
 
 let mainWindow: BrowserWindow | null = null
 let rendererReady = false
-const manager = new TmuxManager()
+// On Windows, the tmux binary doesn't exist natively. ZellijManager
+// implements the same public API but drives `zellij` (a Rust-based
+// multiplexer with native Windows support) instead. Mac and Linux keep
+// using tmux exactly as before.
+const manager = process.platform === 'win32'
+  ? new ZellijManager()
+  : new TmuxManager()
 const bookmarks = new BookmarkStore()
 const settings = new SettingsStore()
 
