@@ -4,6 +4,10 @@ Multi-session terminal hub for Claude Code, backed by tmux.
 
 PikudClaude is a macOS desktop app that lets you orchestrate many Claude Code sessions side-by-side — switch between them with `⌘1`–`⌘9` or a fuzzy palette, get notified when Claude needs your input, and (uniquely) **type and read Hebrew, Arabic, and other right-to-left scripts correctly** — a feature missing from VSCode, Cursor, Hyper, Tabby, and other xterm.js-based Electron terminals.
 
+<p align="center">
+  <img src="https://pikud.io/assets/terminal-demo.svg" alt="Animated PikudClaude demo: type in one project, switch to another, ask in Hebrew, read a Hebrew + English answer, open Settings" width="100%" />
+</p>
+
 ## Latest release — v0.2.5
 
 [Download `PikudClaude-0.2.5-arm64.dmg`](https://github.com/wmgltd/PikudClaude/releases/tag/v0.2.5) (macOS Apple Silicon, signed + notarized) · landing page at [pikud.io](https://pikud.io).
