@@ -16,3 +16,6 @@ dist/
 
 # Claude Code per-project state
 .claude/
+
+# Windows zellij binary — downloaded at build time by scripts/fetch-zellij-win.sh
+build/win/zellij.exe

@@ -1,0 +1,76 @@
+name: Build Windows
+
+# Manual trigger only for now. Once stable, we can wire this to tag pushes
+# so every `v*` release also produces signed Windows artifacts.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing git tag to build (e.g. v0.2.6). Leave blank to build current main.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write   # needed to upload artifacts to GitHub releases
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+          # zellij.exe is committed to build/win/, no LFS needed
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # node-pty compiles natively here on Windows, which is exactly what
+        # we couldn't do from a Mac runner.
+        run: npm ci
+
+      - name: Fetch bundled zellij.exe
+        shell: bash
+        run: bash scripts/fetch-zellij-win.sh
+
+      - name: Build renderer + main
+        run: npm run build
+
+      - name: Package Windows artifacts (zip + NSIS installer)
+        run: npx electron-builder --win --x64 --publish never
+        env:
+          # electron-builder fingerprints the build with these
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List dist/
+        shell: bash
+        run: ls -lh dist/
+
+      - name: Upload portable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: pikudclaude-windows-zip
+          path: dist/*.zip
+          retention-days: 14
+
+      - name: Upload installer exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: pikudclaude-windows-installer
+          path: dist/*Setup*.exe
+          retention-days: 14
+
+      - name: Upload latest.yml (auto-updater manifest)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pikudclaude-windows-updater-manifest
+          path: dist/latest.yml
+          if-no-files-found: warn
+          retention-days: 14

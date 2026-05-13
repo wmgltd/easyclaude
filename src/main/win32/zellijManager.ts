@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import * as pty from 'node-pty'
 import type { IPty } from 'node-pty'
 import { EventEmitter } from 'node:events'
+import { app } from 'electron'
 import type {
   SessionMeta,
   CreateSessionOpts,
@@ -31,16 +32,38 @@ import { loadSessions, saveSessions } from '../store'
 
 const execFileAsync = promisify(execFile)
 
-// On Windows we'll eventually bundle zellij.exe with the installer. For now
-// rely on PATH (developer is expected to have run `winget install Zellij`
-// or equivalent during the spike). Override with ZELLIJ_BIN if needed.
-const ZELLIJ_BIN = process.env.ZELLIJ_BIN || 'zellij'
+/**
+ * Path to the zellij binary. In packaged builds we bundle zellij.exe under
+ * the app's resources directory (configured via build.win.extraResources in
+ * package.json). In dev mode (`npm run dev`) the binary isn't bundled, so
+ * fall back to the build/win/ copy in the source tree, then finally to PATH
+ * (so the spike workflow on Mac still works).
+ *
+ * Override at runtime with the ZELLIJ_BIN environment variable.
+ */
+function resolveZellijBin(): string {
+  if (process.env.ZELLIJ_BIN) return process.env.ZELLIJ_BIN
+  if (app.isPackaged) {
+    const bundled = join(process.resourcesPath, 'zellij.exe')
+    if (existsSync(bundled)) return bundled
+  }
+  // Dev mode — look for the binary inside the source tree
+  const devBundled = join(app.getAppPath(), 'build', 'win', 'zellij.exe')
+  if (existsSync(devBundled)) return devBundled
+  return 'zellij'
+}
+
+const ZELLIJ_BIN_LAZY: { value: string | null } = { value: null }
+function ZELLIJ_BIN(): string {
+  if (!ZELLIJ_BIN_LAZY.value) ZELLIJ_BIN_LAZY.value = resolveZellijBin()
+  return ZELLIJ_BIN_LAZY.value
+}
 
 const NATIVE_PREFIX = 'pikudclaude-'
 const nativeZellijName = (id: string): string => `${NATIVE_PREFIX}${id}`
 
 async function zellij(...args: string[]): Promise<string> {
-  const { stdout } = await execFileAsync(ZELLIJ_BIN, args)
+  const { stdout } = await execFileAsync(ZELLIJ_BIN(), args)
   return stdout
 }
 
@@ -423,7 +446,7 @@ export class ZellijManager extends EventEmitter {
       await this.refreshPaneId(s)
     }
     const p = pty.spawn(
-      ZELLIJ_BIN,
+      ZELLIJ_BIN(),
       ['attach', s.tmuxName],
       {
         name: 'xterm-256color',

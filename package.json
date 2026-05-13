@@ -14,6 +14,8 @@
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-vite build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder --mac",
+    "prep:win": "bash scripts/fetch-zellij-win.sh",
+    "dist:win": "bash scripts/fetch-zellij-win.sh && electron-vite build && electron-builder --win --x64",
     "release": "bash scripts/release.sh"
   },
   "dependencies": {
@@ -78,6 +80,37 @@
     },
     "dmg": {
       "icon": "build/icon.icns"
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "extraResources": [
+        {
+          "from": "build/win/zellij.exe",
+          "to": "zellij.exe"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PikudClaude"
     },
     "publish": {
       "provider": "github",
